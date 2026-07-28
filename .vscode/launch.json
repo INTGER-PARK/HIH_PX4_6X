@@ -1,0 +1,67 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "jlink (px4_fmu-v6x)",
+            "gdbPath": "/usr/bin/gdb-multiarch",
+            "device": "STM32H753II",
+            "svdFile": "",
+            "rtos": "/home/parkjeongsu/PX4-Optimized/platforms/nuttx/NuttX/nuttx/tools/jlink-nuttx.so",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "interface": "swd",
+            //"ipAddress": "server:19020",
+            "cwd": "${workspaceFolder}",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchCommands": [
+                "source ${workspaceFolder}/platforms/nuttx/Debug/PX4",
+                "source ${workspaceFolder}/platforms/nuttx/Debug/NuttX",
+                "source ${workspaceFolder}/platforms/nuttx/Debug/ARMv7M",
+                "set mem inaccessible-by-default off",
+                "set print pretty",
+            ]
+        },
+        {
+            "name": "stlink (px4_fmu-v6x)",
+            "gdbPath": "/usr/bin/gdb-multiarch",
+            "device": "STM32H753II",
+            "svdFile": "",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "stutil",
+            "cwd": "${workspaceFolder}",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchCommands": [
+                "source ${workspaceFolder}/platforms/nuttx/Debug/PX4",
+                "source ${workspaceFolder}/platforms/nuttx/Debug/NuttX",
+                "source ${workspaceFolder}/platforms/nuttx/Debug/ARMv7M",
+                "set mem inaccessible-by-default off",
+                "set print pretty",
+            ]
+        },
+        {
+            "name": "blackmagic (px4_fmu-v6x)",
+            "gdbPath": "/usr/bin/gdb-multiarch",
+            "device": "STM32H753II",
+            "svdFile": "",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "/dev/ttyACM0",
+            "interface": "swd",
+            "cwd": "${workspaceFolder}",
+            "internalConsoleOptions": "openOnSessionStart",
+            "preLaunchCommands": [
+                "source ${workspaceFolder}/platforms/nuttx/Debug/PX4",
+                "source ${workspaceFolder}/platforms/nuttx/Debug/NuttX",
+                "source ${workspaceFolder}/platforms/nuttx/Debug/ARMv7M",
+                "set mem inaccessible-by-default off",
+                "set print pretty",
+            ]
+        }
+    ]
+}
