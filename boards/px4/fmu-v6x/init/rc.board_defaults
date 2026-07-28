@@ -3,6 +3,11 @@
 # board specific defaults
 #------------------------------------------------------------------------------
 
+# Bitcraze Flow Deck v2: PMW3901 optical flow over external SPI and
+# VL53L1X range finder over external I2C.
+param set-default SENS_EN_PMW3901 1
+param set-default SENS_EN_VL53L1X 1
+
 # Mavlink ethernet (CFG 1000)
 param set-default MAV_2_CONFIG 1000
 param set-default MAV_2_BROADCAST 1
