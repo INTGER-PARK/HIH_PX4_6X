@@ -1,0 +1,49 @@
+module_name: palletrone_control
+parameters:
+- group: Palletrone Control
+  definitions:
+    MC_ROLL_D:
+      description:
+        short: Palletrone roll attitude D gain
+      type: float
+      default: 0.05
+    MC_PITCH_D:
+      description:
+        short: Palletrone pitch attitude D gain
+      type: float
+      default: 0.05
+    MC_YAW_D:
+      description:
+        short: Palletrone yaw attitude D gain
+      type: float
+      default: 0.01
+    MC_YAWTRIM:
+      description:
+        short: Palletrone yaw trimming limit
+      type: float
+      default: 1.0
+    MPC_USE_HTE:
+      description:
+        short: Use hover thrust estimator
+      type: boolean
+      default: true
+    MPC_XY_ACC_MAX:
+      description:
+        short: Palletrone maximum horizontal acceleration
+      type: float
+      default: 10.0
+    MPC_Z_ACC_MAX_UP:
+      description:
+        short: Palletrone maximum upward acceleration
+      type: float
+      default: 80.0
+    MPC_XY_D:
+      description:
+        short: Palletrone horizontal position D gain
+      type: float
+      default: 0.0
+    MPC_Z_D:
+      description:
+        short: Palletrone vertical position D gain
+      type: float
+      default: 0.0
