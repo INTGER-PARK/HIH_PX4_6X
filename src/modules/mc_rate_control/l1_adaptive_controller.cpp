@@ -1,5 +1,7 @@
 #include "l1_adaptive_controller.hpp"
 
+#include <lib/palletrone/PalletroneConfig.hpp>
+
 #include <mathlib/math/Functions.hpp>
 #include <cmath>
 
@@ -57,9 +59,11 @@ void l1_adaptive_controller(float dt,
 	// -----------------------------
 	// 1) tunables (DOB에서 쓰는 nominal J 그대로)
 	// -----------------------------
-	constexpr float Jxx = 0.0768f;
-	constexpr float Jyy = 0.0871f;
-	constexpr float Jzz = 0.113f;
+	// 이전 8 kg 기체: [0.0768, 0.0871, 0.1130] kg*m^2
+	// 변경 4 kg 기체: 각 축 관성을 정확히 1/2 적용.
+	constexpr float Jxx = palletrone::kInertiaXxKgM2;
+	constexpr float Jyy = palletrone::kInertiaYyKgM2;
+	constexpr float Jzz = palletrone::kInertiaZzKgM2;
 
 	constexpr float invJxx = 1.0f / Jxx;
 	constexpr float invJyy = 1.0f / Jyy;

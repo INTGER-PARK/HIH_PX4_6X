@@ -1,4 +1,5 @@
 #include "dob_based_com_estimator.hpp"
+#include <lib/palletrone/PalletroneConfig.hpp>
 #include <matrix/matrix/math.hpp>
 #include <mathlib/math/Functions.hpp> // math::constrain
 #include <cmath>
@@ -50,9 +51,11 @@ float est_gamma_z = 2.2e-4f;//8.5e-5f;   // z
 // static float mass = 8.0f;
 
 
-float Jxx_est = 0.0768;
-float Jyy_est = 0.0871;
-float Jzz_est = 0.113;
+// 이전 8 kg 기체 관성: [0.0768, 0.0871, 0.1130] kg*m^2
+// 변경 4 kg 기체: 요청대로 각 축을 정확히 1/2 적용.
+constexpr float Jxx_est = palletrone::kInertiaXxKgM2;
+constexpr float Jyy_est = palletrone::kInertiaYyKgM2;
+constexpr float Jzz_est = palletrone::kInertiaZzKgM2;
 
 
 

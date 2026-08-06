@@ -184,7 +184,9 @@ private:
 		(ParamInt<px4::params::CA_AIRFRAME>) _param_ca_airframe,
 		(ParamInt<px4::params::CA_METHOD>) _param_ca_method,
 		(ParamInt<px4::params::CA_FAILURE_MODE>) _param_ca_failure_mode,
-		(ParamInt<px4::params::CA_R_REV>) _param_r_rev
+		(ParamInt<px4::params::CA_R_REV>) _param_r_rev,
+		// DShot conversion uses the same live minimum as the PX4 DShot driver.
+		(ParamFloat<px4::params::DSHOT_MIN>) _param_dshot_min
 	)
 
 };

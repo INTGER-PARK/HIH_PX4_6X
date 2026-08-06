@@ -2,21 +2,32 @@ module_name: palletrone_control
 parameters:
 - group: Palletrone Control
   definitions:
+    ZZZ_PAL_CFG_VER:
+      description:
+        short: Palletrone mini-airframe configuration migration version
+        long: Internal one-time marker for targeted gain and AUX DShot migration without resetting calibration.
+      type: int32
+      default: 0
+      min: 0
+      max: 2147483647
     MC_ROLL_D:
       description:
         short: Palletrone roll attitude D gain
+        long: Defaulted to zero for the 4 kg mini airframe; retune after stable hover.
       type: float
-      default: 0.05
+      default: 0.0
     MC_PITCH_D:
       description:
         short: Palletrone pitch attitude D gain
+        long: Defaulted to zero for the 4 kg mini airframe; retune after stable hover.
       type: float
-      default: 0.05
+      default: 0.0
     MC_YAW_D:
       description:
         short: Palletrone yaw attitude D gain
+        long: Defaulted to zero for the 4 kg mini airframe; retune after stable hover.
       type: float
-      default: 0.01
+      default: 0.0
     MC_YAWTRIM:
       description:
         short: Palletrone yaw trimming limit

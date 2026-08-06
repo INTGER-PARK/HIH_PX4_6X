@@ -1,36 +1,68 @@
 #include "ControlAllocationUtils.hpp"
-#include <math.h>
 
-static inline float clampf(float x, float lo, float hi)
+#include <lib/palletrone/PalletroneConfig.hpp>
+#include <px4_platform_common/defines.h>
+
+namespace
 {
-    return (x < lo) ? lo : (x > hi) ? hi : x;
+
+float clampf(float value, float lower, float upper)
+{
+	return value < lower ? lower : (value > upper ? upper : value);
 }
 
-
-float force_to_pwm_scale(float force)
+float validated_dshot_min(float dshot_min_norm)
 {
-	float a = 2.0962e-05f;
-	float b = 0.0085f;
-	float c = -36.0347f;
-
-    float pwm_min = 1100.0f;
-	float pwm_max = 1900.0f;
-    float pwm_scaled = 0.f;
-
-	float discriminant = b * b - 4.0f * a * (c - force);
-
-	if (discriminant < 0.0f) {
-		// 안정성을 위해 예외 처리 (루트 안이 음수면 sqrt 불가)
-        pwm_scaled = 0.0f;
+	if (!PX4_ISFINITE(dshot_min_norm)) {
+		return palletrone::kDshotMinDefault;
 	}
-    else {
-        float pwm = (-b + sqrtf(discriminant)) / (2.0f * a);
-        //pwm_scaled(i) = pwm;  // 실제 PWM 수치
-        pwm_scaled = (pwm - pwm_min) / (pwm_max - pwm_min);
 
-        pwm_scaled = clampf(pwm_scaled, 0.0f, 0.8f);
-    }
+	// Keep a valid denominator and preserve room below the 80% safety ceiling.
+	return clampf(dshot_min_norm, 0.0f, palletrone::kMotorThrottleLimit - 0.001f);
+}
 
-    return pwm_scaled;
+} // namespace
 
+float dshot_throttle_to_actuator_control(float esc_throttle, float dshot_min_norm)
+{
+	const float dshot_min = validated_dshot_min(dshot_min_norm);
+	const float throttle = clampf(esc_throttle, dshot_min, palletrone::kMotorThrottleLimit);
+
+	// PX4 non-reversible DShot mapping:
+	// actual_throttle = DSHOT_MIN + actuator_control * (1 - DSHOT_MIN)
+	return clampf((throttle - dshot_min) / (1.0f - dshot_min), 0.0f, 1.0f);
+}
+
+float force_to_dshot_control(float force_n, float dshot_min_norm)
+{
+	// NaN/non-positive requests map to actuator control 0. Disarming remains
+	// handled by the PX4 output driver rather than this conversion function.
+	if (!PX4_ISFINITE(force_n) || force_n <= 0.0f) {
+		return 0.0f;
+	}
+
+	// 이전 analog PWM 모델:
+	//   force -> inverse quadratic PWM pulse width -> normalized 1100~1900 us
+	// 변경 DShot 모델:
+	//   force -> F60 lookup-table throttle -> PX4 DShot normalized command
+	const float limited_force = clampf(force_n, 0.0f, palletrone::kMotorMaxUsableThrustN);
+	float esc_throttle = palletrone::kMotorThrottleLimit;
+
+	for (int i = 0; i < palletrone::kMotorModelPointCount - 1; ++i) {
+		const float force_low = palletrone::kMotorThrustTableN[i];
+		const float force_high = palletrone::kMotorThrustTableN[i + 1];
+
+		if (limited_force <= force_high) {
+			const float interpolation = (limited_force - force_low) / (force_high - force_low);
+			esc_throttle = palletrone::kMotorThrottleTable[i]
+			       + interpolation * (palletrone::kMotorThrottleTable[i + 1]
+						  - palletrone::kMotorThrottleTable[i]);
+			break;
+		}
+	}
+
+	// Final physical ESC throttle is independently capped at 80%.
+	esc_throttle = clampf(esc_throttle, validated_dshot_min(dshot_min_norm),
+			      palletrone::kMotorThrottleLimit);
+	return dshot_throttle_to_actuator_control(esc_throttle, dshot_min_norm);
 }

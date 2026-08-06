@@ -4,19 +4,19 @@
             "name": "PX4",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/parkjeongsu/PX4-Optimized/boards/px4/fmu-v6x/src",
-                "/home/parkjeongsu/PX4-Optimized/platforms/nuttx/src/px4/stm/stm32h7/include",
-                "/home/parkjeongsu/PX4-Optimized/platforms/nuttx/NuttX/nuttx/include/"
+                "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/boards/px4/fmu-v6x/src",
+                "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/platforms/nuttx/src/px4/stm/stm32h7/include",
+                "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/platforms/nuttx/NuttX/nuttx/include/"
             ],
             "defines": [],
             "macFrameworkPath": [],
             "configurationProvider": "ms-vscode.cmake-tools",
             "cppStandard": "c++14",
             "cStandard": "c11",
-            "dotConfig": "/home/parkjeongsu/PX4-Optimized/build/px4_fmu-v6x_default/NuttX/nuttx/.config",
+            "dotConfig": "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/build/px4_fmu-v6x_default/NuttX/nuttx/.config",
             "forcedInclude": [
-                 "/home/parkjeongsu/PX4-Optimized/build/px4_fmu-v6x_default/px4_boardconfig.h",
-                 "/home/parkjeongsu/PX4-Optimized/platforms/common/include/px4_platform_common/defines.h"
+                 "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/build/px4_fmu-v6x_default/px4_boardconfig.h",
+                 "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/platforms/common/include/px4_platform_common/defines.h"
                  ]
         }
     ],

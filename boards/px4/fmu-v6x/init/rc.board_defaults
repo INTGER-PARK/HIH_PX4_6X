@@ -17,4 +17,65 @@ param set-default MAV_2_RATE 100000
 param set-default MAV_2_REMOTE_PRT 14550
 param set-default MAV_2_UDP_PRT 14550
 
+
+# -----------------------------------------------------------------------------
+# Palletrone 4 kg mini-airframe motor-output defaults
+# -----------------------------------------------------------------------------
+# 이전 모델: analog PWM output configuration.
+# 변경 모델: Pixhawk 6X AUX/FMU 1-4 use DShot600 for Motor 1-4.
+# MAIN/PX4IO assignments are deliberately left unchanged.
+param set-default PWM_AUX_TIM0 -3
+param set-default PWM_AUX_FUNC1 101
+param set-default PWM_AUX_FUNC2 102
+param set-default PWM_AUX_FUNC3 103
+param set-default PWM_AUX_FUNC4 104
+param set-default DSHOT_MIN 0.055
+param set-default DSHOT_3D_ENABLE 0
+
+# The custom allocator already converts force [N] through the F60 lookup table.
+# Avoid applying PX4's generic thrust model a second time.
+param set-default THR_MDL_FAC 0.0
+
+# -----------------------------------------------------------------------------
+# One-time migration for Pixhawk units that retain old persistent parameters
+# -----------------------------------------------------------------------------
+# Only the old gains and AUX output parameters below are changed. Sensor, board,
+# compass, gyro, accelerometer, RC, and other unrelated calibration is retained.
+if param compare -s ZZZ_PAL_CFG_VER 20260805
+then
+    echo "Palletrone mini-airframe migration already applied"
+else
+    echo "Applying Palletrone mini-airframe migration 20260805"
+
+    # Rate gains -> defaults compiled in this source tree.
+    param reset MC_ROLLRATE_P MC_ROLLRATE_I MC_ROLLRATE_D MC_ROLLRATE_FF MC_ROLLRATE_K MC_RR_INT_LIM
+    param reset MC_PITCHRATE_P MC_PITCHRATE_I MC_PITCHRATE_D MC_PITCHRATE_FF MC_PITCHRATE_K MC_PR_INT_LIM
+    param reset MC_YAWRATE_P MC_YAWRATE_I MC_YAWRATE_D MC_YAWRATE_FF MC_YAWRATE_K MC_YR_INT_LIM
+
+    # Attitude gains -> source-tree defaults; custom attitude D terms -> zero.
+    param reset MC_ROLL_P MC_PITCH_P MC_YAW_P MC_YAW_WEIGHT
+    param reset MC_ROLL_D MC_PITCH_D MC_YAW_D
+    param reset MC_REF_W_N MC_REF_FF MC_REF_FF_MAX
+
+    # Position and velocity gains -> source-tree defaults.
+    param reset MPC_XY_P MPC_Z_P MPC_XY_D MPC_Z_D
+    param reset MPC_XY_VEL_P_ACC MPC_XY_VEL_I_ACC MPC_XY_VEL_D_ACC
+    param reset MPC_Z_VEL_P_ACC MPC_Z_VEL_I_ACC MPC_Z_VEL_D_ACC
+
+    # Force actual values once so saved analog-PWM values cannot override the
+    # new defaults after firmware-only update. MAIN/PX4IO remains untouched.
+    param set PWM_AUX_TIM0 -3
+    param set PWM_AUX_FUNC1 101
+    param set PWM_AUX_FUNC2 102
+    param set PWM_AUX_FUNC3 103
+    param set PWM_AUX_FUNC4 104
+    param set DSHOT_MIN 0.055
+    param set DSHOT_3D_ENABLE 0
+    param set THR_MDL_FAC 0.0
+
+    # Mark completion only after all targeted updates above.
+    param set ZZZ_PAL_CFG_VER 20260805
+    param save
+fi
+
 safety_button start

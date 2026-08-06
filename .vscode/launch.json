@@ -6,7 +6,7 @@
             "gdbPath": "/usr/bin/gdb-multiarch",
             "device": "STM32H753II",
             "svdFile": "",
-            "rtos": "/home/parkjeongsu/PX4-Optimized/platforms/nuttx/NuttX/nuttx/tools/jlink-nuttx.so",
+            "rtos": "/home/parkjeongsu/PX4-Optimized_4kg_DShot80_COMPLETE_SOURCE/PX4-Optimized/platforms/nuttx/NuttX/nuttx/tools/jlink-nuttx.so",
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
             "type": "cortex-debug",

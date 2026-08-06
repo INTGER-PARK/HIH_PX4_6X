@@ -41,6 +41,8 @@
 
 #include "ControlAllocator.hpp"
 
+#include <lib/palletrone/PalletroneConfig.hpp>
+
 ModuleBase::Descriptor ControlAllocator::desc{task_spawn, custom_command, print_usage};
 
 #include <drivers/drv_hrt.h>
@@ -176,9 +178,9 @@ ControlAllocator::Run()
 
 	if(_center_of_mass_sub.update(&com_update)){
 
-		xc = com_update.com_update[0];
-		yc = com_update.com_update[1]; //-0.04f
-		zc = com_update.com_update[2];
+		xc = 0.0f; //com_update.com_update[0];
+		yc = 0.0f; //com_update.com_update[1]; //-0.04f
+		zc = 0.0f ;//com_update.com_update[2];
 
 	}
 
@@ -224,7 +226,9 @@ ControlAllocator::Run()
 
 		_thrust_sp(0) = 2*rpyz_cmd.pitch;
 		_thrust_sp(1) =	2*rpyz_cmd.roll;
-		_thrust_sp(2) = 55.0f*rpyz_cmd.throttle;
+		// 이전 대형 기체: total thrust scale = 55.0f N
+		// 변경 미니 기체: F60 proxy maximum usable thrust x 4 motors
+		_thrust_sp(2) = palletrone::kTotalMaxUsableThrustN * rpyz_cmd.throttle;
 		do_update = true;
 
 		wrench_cmd.tr_d=_torque_sp(0);
@@ -275,11 +279,13 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 	_control_sp(3) = _thrust_sp(2); // -22.0 : 음수여야함
 
 	// Assign control effectiveness matrix
-	float xi = - 0.01;	// so called b-over-k
+	float xi = + 0.01;	// so called b-over-k
 	float r2 = sqrt(2);
-	float r_arm = 0.23; // 0.21 [0923]
+	// 이전 대형 기체: r_arm = 0.230f m
+	// 변경 미니 기체: CoG-to-motor arm = 0.181f m
+	const float r_arm = palletrone::kArmLengthM;
 	float l_servo = -0.005; // 0.006; [260222 출근]
-	bool allocation_version_1 = false;
+	bool allocation_version_1 = true;
 	/*
 	float th1 = 0.0; //rad
 	float th2 = 0.0; //rad
@@ -389,9 +395,12 @@ ControlAllocator::update_effectiveness_matrix_if_needed()
 
 	_actuator_sp = _mix * (_control_sp);
 
-	for(int i = 0; i<4; ++i){
-		if(_actuator_sp(i) > 55.0f){_actuator_sp(i) = 55.0f;}
-		if(_actuator_sp(i) < 0.5f){_actuator_sp(i) = 0.5f;}
+	for (int i = 0; i < 4; ++i) {
+		// 이전 대형 기체: per-motor upper clamp = 55.0f N
+		// 변경 미니 기체: 0.80 x proxy full thrust = 16.34572 N
+		_actuator_sp(i) = math::constrain(_actuator_sp(i),
+				  palletrone::kMotorMinimumForceN,
+				  palletrone::kMotorMaxUsableThrustN);
 	}
 
 
@@ -416,25 +425,27 @@ ControlAllocator::publish_actuator_controls()
     actuator_motors.timestamp_sample = _timestamp_sample;
     actuator_motors.reversible_flags = _param_r_rev.get();
 
-    // 원하는 saturation 범위
     constexpr float u_min = 0.0f;
-    constexpr float u_max = 0.85f;
+    const float dshot_min = _param_dshot_min.get();
+
+    // 이전 모델: actuator_motors.control upper clamp = 0.85f
+    // 변경 미니 모델: physical DShot throttle is capped at exactly 0.80f.
+    // PX4 maps control=0 to DSHOT_MIN, therefore the control ceiling is
+    // (0.80 - DSHOT_MIN) / (1 - DSHOT_MIN), not simply 0.80.
+    const float u_max = dshot_throttle_to_actuator_control(
+		palletrone::kMotorThrottleLimit, dshot_min);
 
     for (int i = 0; i < 4; i++) {
 
         const float force_cmd = _actuator_sp(i);
 
-        // raw thrust command
-        if (PX4_ISFINITE(force_cmd)) {
-            thrust_commands.thrust_command[i] = force_cmd;
-        } else {
-            thrust_commands.thrust_command[i] = 0.f;
-        }
+        // Publish the already-clamped physical thrust command [N].
+        thrust_commands.thrust_command[i] = PX4_ISFINITE(force_cmd) ? force_cmd : 0.f;
 
-        // force -> pwm scale
-        float u = force_to_pwm_scale(force_cmd);
+        // 변경 DShot 경로: force [N] -> lookup throttle -> PX4 control [0, 1].
+        float u = force_to_dshot_control(force_cmd, dshot_min);
 
-        // ✅ publish 직전 최종 saturation (2중 안전)
+        // Final independent 80% DShot safety clamp.
         u = math::constrain(u, u_min, u_max);
 
         // 혹시 NaN이면 0으로

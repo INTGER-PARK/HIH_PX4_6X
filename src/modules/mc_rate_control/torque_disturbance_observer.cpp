@@ -1,5 +1,6 @@
 
 #include "torque_disturbance_observer.hpp"
+#include <lib/palletrone/PalletroneConfig.hpp>
 #include <matrix/matrix/math.hpp>
 #include <cmath>
 
@@ -58,9 +59,11 @@ float root2 = sqrtf(2.0f); // damping factor = 0.707
 // float Jyy = 0.0871f;
 // float Jzz = 0.113f;
 
-float Jxx = 0.0768f;
-float Jyy = 0.0871f;
-float Jzz = 0.113f;
+// 이전 8 kg 기체 관성: [0.0768, 0.0871, 0.1130] kg*m^2
+// 변경 4 kg 기체: 요청대로 각 축을 정확히 1/2 적용.
+constexpr float Jxx = palletrone::kInertiaXxKgM2;
+constexpr float Jyy = palletrone::kInertiaYyKgM2;
+constexpr float Jzz = palletrone::kInertiaZzKgM2;
 
 
 

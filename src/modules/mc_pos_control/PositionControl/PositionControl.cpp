@@ -37,6 +37,7 @@
 
 #include "PositionControl.hpp"
 #include "ControlMath.hpp"
+#include <lib/palletrone/PalletroneConfig.hpp>
 #include <float.h>
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/defines.h>
@@ -245,7 +246,10 @@ void PositionControl::_velocityControl(const float dt)
 	_acc_sp(1) = math::constrain(_acc_sp(1), -3.0f, 3.0f);
 	_acc_sp(2) = math::constrain(_acc_sp(2), -_lim_acc_vertical, _lim_acc_vertical);
 
-	float mass = 8.0f;
+	// 이전 대형 기체: mass = 8.0f kg
+	// 변경 미니 기체: mass = 4.0f kg (shared configuration)
+	
+	constexpr float mass = 4.0f;
 
 
 
