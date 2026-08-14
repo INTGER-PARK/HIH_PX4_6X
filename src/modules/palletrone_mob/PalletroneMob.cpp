@@ -74,7 +74,8 @@ bool PalletroneMob::parametersValid() const
 }
 
 // Convert final motor thrust [N] and actual DYNAMIXEL angle [rad] to the known
-// body-FRD actuator wrench. Torque terms reproduce the active allocator rows.
+// body-FRD actuator wrench at the modeled CoM. Rotor positions and positive
+// tilt directions use the user-confirmed FRD signs in PalletroneConfig.
 void PalletroneMob::computeActuatorWrench(Vector3f &force, Vector3f &torque) const
 {
 	force.setZero();
@@ -91,20 +92,16 @@ void PalletroneMob::computeActuatorWrench(Vector3f &force, Vector3f &torque) con
 		const Vector3f rotor_force = direction * _motor_thrust_n[i];
 		force += rotor_force;
 
-		// Match the active custom allocator effectiveness matrix exactly. Its
-		// yaw row intentionally contains reaction torque only at the modeled
-		// zero CoM offset (it omits the tilted-force r x f yaw component).
-		const float z = palletrone::kRotorVerticalOffsetM;
+		const float arm_xy = palletrone::kArmLengthM * palletrone::kInvSqrt2;
+		const Vector3f rotor_position{
+			palletrone::kRotorPositionXY[i][0] * arm_xy,
+			palletrone::kRotorPositionXY[i][1] * arm_xy,
+			palletrone::kRotorVerticalOffsetM
+		};
 		const float kappa = palletrone::kRotorReactionTorqueRatioM;
-		const float arm = palletrone::kArmLengthM * palletrone::kInvSqrt2;
-		const float sine_scaled = sine * palletrone::kInvSqrt2;
-		const float roll_sign = i < 2 ? 1.f : -1.f;
-		const float pitch_sign = (i == 0 || i == 1) ? 1.f : -1.f;
-		const float tilt_coefficient = (i == 0 || i == 3) ? (-z + kappa) : (z - kappa);
-		const float pitch_tilt_coefficient[4] = {z + kappa, z - kappa, -z - kappa, -z + kappa};
-		torque(0) += (roll_sign * arm * cosine + tilt_coefficient * sine_scaled) * _motor_thrust_n[i];
-		torque(1) += (pitch_sign * arm * cosine + pitch_tilt_coefficient[i] * sine_scaled) * _motor_thrust_n[i];
-		torque(2) += (-palletrone::kRotorReactionSign[i] * kappa * cosine) * _motor_thrust_n[i];
+		const Vector3f reaction_torque = direction
+			* (palletrone::kRotorReactionSign[i] * kappa * _motor_thrust_n[i]);
+		torque += rotor_position.cross(rotor_force) + reaction_torque;
 	}
 }
 

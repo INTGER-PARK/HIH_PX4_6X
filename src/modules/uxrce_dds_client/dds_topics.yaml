@@ -50,9 +50,6 @@ publications:
   - topic: /fmu/out/custom_dt
     type: px4_msgs::msg::CustomDt
 
-  - topic: /fmu/out/l1_adaptive_status
-    type: px4_msgs::msg::L1AdaptiveStatus
-
   - topic: /fmu/out/register_ext_component_reply
     type: px4_msgs::msg::RegisterExtComponentReply
 

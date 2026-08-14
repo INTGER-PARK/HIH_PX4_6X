@@ -27,15 +27,24 @@ static constexpr float kVehicleMassKg = 4.0f;
 static constexpr float kArmLengthM = 0.181f;
 
 // Rotor hubs are an X configuration about the modeled CoM/body origin.
-// FRD order matches allocator/PX4 motor indices: front-left, rear-left,
-// rear-right, front-right. The rotor plane is 5 mm above the origin.
+// FRD order matches allocator/PX4 motor indices. The user-confirmed x/y
+// signs are M1 (+x,-y), M2 (-x,-y), M3 (-x,+y), M4 (+x,+y).
+// The rotor plane is 5 mm above the origin.
 static constexpr float kRotorVerticalOffsetM = -0.005f;
 static constexpr float kRotorReactionTorqueRatioM = 0.01f;
 static constexpr float kInvSqrt2 = 0.7071067811865475f;
+
+// Unit x/y signs of each rotor position in the body FRD frame. Multiply by
+// kArmLengthM/sqrt(2) to obtain the modeled CoM-to-rotor coordinates [m].
+static constexpr float kRotorPositionXY[4][2] = {
+	{ 1.f, -1.f}, {-1.f, -1.f}, {-1.f,  1.f}, { 1.f,  1.f}
+};
+
 // Positive actual servo angle horizontal thrust signs in FRD. At zero angle
-// every rotor thrust direction is [0, 0, -1] (upward).
+// every rotor thrust direction is [0, 0, -1] (upward). Positive tilt is
+// radially outward using the same user-confirmed x/y signs as the rotor.
 static constexpr float kTiltDirectionXY[4][2] = {
-	{ 1.f,  1.f}, { 1.f, -1.f}, {-1.f, -1.f}, {-1.f,  1.f}
+	{ 1.f, -1.f}, {-1.f, -1.f}, {-1.f,  1.f}, { 1.f,  1.f}
 };
 
 // Reaction torque is sigma * kappa * T * thrust_direction.

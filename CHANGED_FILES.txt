@@ -11,6 +11,5 @@ src/modules/control_allocator/ControlAllocator.cpp
 src/modules/control_allocator/ControlAllocator.hpp
 src/modules/mc_pos_control/PositionControl/PositionControl.cpp
 src/modules/mc_rate_control/dob_based_com_estimator.cpp
-src/modules/mc_rate_control/l1_adaptive_controller.cpp
 src/modules/mc_rate_control/palletrone_params.yaml
 src/modules/mc_rate_control/torque_disturbance_observer.cpp

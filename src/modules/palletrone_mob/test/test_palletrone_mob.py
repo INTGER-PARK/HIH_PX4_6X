@@ -40,6 +40,17 @@ def simulate(external, known, duration=4.0, variable_dt=False):
 
 
 class PalletroneMobReferenceTest(unittest.TestCase):
+    def test_confirmed_frd_rotor_geometry(self):
+        position_signs = ((1, -1), (-1, -1), (-1, 1), (1, 1))
+        positive_tilt_signs = ((1, -1), (-1, -1), (-1, 1), (1, 1))
+        self.assertEqual(position_signs, positive_tilt_signs)
+
+        # With zero tilt f=[0,0,-T], r x f must produce the expected
+        # roll/pitch signs for the owner-confirmed FRD rotor positions.
+        zero_tilt_moment_signs = tuple((-y, x) for x, y in position_signs)
+        self.assertEqual(zero_tilt_moment_signs,
+                         ((1, 1), (1, -1), (-1, -1), (-1, 1)))
+
     def test_hover_no_external(self):
         # FRD: actuator thrust -mg and gravity +mg cancel.
         result = simulate(0.0, 0.0)

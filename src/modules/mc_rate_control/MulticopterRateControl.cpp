@@ -43,7 +43,6 @@ ModuleBase::Descriptor MulticopterRateControl::desc{task_spawn, custom_command, 
 
  #include <uORB/Publication.hpp>
  #include <uORB/topics/custom_dt.h>
- #include "l1_adaptive_controller.hpp"
 
  using namespace matrix;
  using namespace time_literals;
@@ -341,64 +340,16 @@ uORB::Publication<custom_dt_s> g_custom_dt_pub{ORB_ID(custom_dt)};
 				 vehicle_torque_setpoint.xyz[0] = tau_rpy_tilde(0);
 				 vehicle_torque_setpoint.xyz[1] = tau_rpy_tilde(1);
 				 vehicle_torque_setpoint.xyz[2] = tau_rpy_tilde(2);
-
-				 l1_adaptive_reset();
 			 }
 			 else
 			 {
 				torque_DOB(dt, desired_tau_PID_rpy, rates, tau_rpy_tilde, _torque_dhat, false);
 
-					if(_custom_control_mode.l1_adaptive_flag)
-					{
-
-						l1_adaptive_controller(dt, desired_tau_PID_rpy, rates,
-						l1_tau_tilde, l1_dhat_tau,
-						l1_tau_comp_raw, l1_tau_comp_lpf);
-
-						// torque command
-						vehicle_torque_setpoint.xyz[0] = l1_tau_tilde(0);
-						vehicle_torque_setpoint.xyz[1] = l1_tau_tilde(1);
-						vehicle_torque_setpoint.xyz[2] = l1_tau_tilde(2);
-
-
-					}
-					else
-					{
-						vehicle_torque_setpoint.xyz[0] = desired_tau_PID_rpy(0);
-						vehicle_torque_setpoint.xyz[1] = desired_tau_PID_rpy(1);
-						vehicle_torque_setpoint.xyz[2] = desired_tau_PID_rpy(2);
-
-						// ✅ L1 OFF면 리셋
-						l1_adaptive_reset();
-
-						// ✅ 로그 일관성 위해 0으로 만들기(선택 강추)
-						l1_dhat_tau      = Vector3f(0.f, 0.f, 0.f);
-						l1_tau_comp_raw  = Vector3f(0.f, 0.f, 0.f);
-						l1_tau_comp_lpf  = Vector3f(0.f, 0.f, 0.f);
-						l1_tau_tilde     = desired_tau_PID_rpy; // 또는 0
-					}
+				vehicle_torque_setpoint.xyz[0] = desired_tau_PID_rpy(0);
+				vehicle_torque_setpoint.xyz[1] = desired_tau_PID_rpy(1);
+				vehicle_torque_setpoint.xyz[2] = desired_tau_PID_rpy(2);
 
 			 }
-
-
-			// ================= publish L1AdaptiveStatus =================
-			l1_adaptive_status_s l1_status{};
-
-			l1_status.timestamp        = hrt_absolute_time();
-
-			l1_status.dhat_tau[0] = l1_dhat_tau(0);
-			l1_status.dhat_tau[1] = l1_dhat_tau(1);
-			l1_status.dhat_tau[2] = l1_dhat_tau(2);
-
-			l1_status.tau_comp_raw[0] = l1_tau_comp_raw(0);
-			l1_status.tau_comp_raw[1] = l1_tau_comp_raw(1);
-			l1_status.tau_comp_raw[2] = l1_tau_comp_raw(2);
-
-			l1_status.tau_comp_lpf[0] = l1_tau_comp_lpf(0);
-			l1_status.tau_comp_lpf[1] = l1_tau_comp_lpf(1);
-			l1_status.tau_comp_lpf[2] = l1_tau_comp_lpf(2);
-
-			_l1_adaptive_status_pub.publish(l1_status);
 
 			 Vector3f dhat_vec(_torque_dhat.xyz[0],
 					 _torque_dhat.xyz[1],

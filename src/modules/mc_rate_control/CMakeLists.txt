@@ -46,9 +46,6 @@ px4_add_module(
 		dob_based_com_estimator.cpp
 		dob_based_com_estimator.hpp
 
-		l1_adaptive_controller.cpp
-		l1_adaptive_controller.hpp
-
 	MODULE_CONFIG
 		mc_acro_params.yaml
 		mc_rate_control_params.yaml

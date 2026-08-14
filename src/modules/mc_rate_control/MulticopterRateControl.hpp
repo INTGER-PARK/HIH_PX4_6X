@@ -64,7 +64,6 @@
  #include <uORB/topics/custom_control_mode.h> // custom
  #include <uORB/topics/center_of_mass.h> // custom
  #include <uORB/topics/torque_dhat.h> //custom
- #include <uORB/topics/l1_adaptive_status.h> //custom
 
 
 
@@ -166,7 +165,6 @@
 	 uORB::Publication<vehicle_thrust_setpoint_s>	_vehicle_thrust_setpoint_pub;
 	 uORB::Publication<center_of_mass_s>	_center_of_mass_pub{ORB_ID(center_of_mass)}; // custom
 	 uORB::Publication<torque_dhat_s>	_torque_dhat_pub{ORB_ID(torque_dhat)}; // custom
-	 uORB::Publication<l1_adaptive_status_s> _l1_adaptive_status_pub{ORB_ID(l1_adaptive_status)};
 
 	 center_of_mass_s center_of_mass_update{}; //custom
 	 custom_control_mode_s _custom_control_mode{}; // custom
@@ -174,10 +172,6 @@
 	 vehicle_control_mode_s	_vehicle_control_mode{};
 	 vehicle_status_s	_vehicle_status{};
 
-	matrix::Vector3f l1_tau_tilde{};
-	matrix::Vector3f l1_dhat_tau{};
-	matrix::Vector3f l1_tau_comp_raw{};
-	matrix::Vector3f l1_tau_comp_lpf{};
 
 
 	 matrix::Vector3f gain_check;

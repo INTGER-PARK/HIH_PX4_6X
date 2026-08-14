@@ -24,7 +24,6 @@
 | `src/modules/control_allocator/ControlAllocationUtils.hpp` | 새 DShot 변환 함수 선언 |
 | `src/modules/mc_rate_control/torque_disturbance_observer.cpp` | nominal inertia를 기존 값의 절반으로 변경 |
 | `src/modules/mc_rate_control/dob_based_com_estimator.cpp` | CoM estimator inertia를 기존 값의 절반으로 변경 |
-| `src/modules/mc_rate_control/l1_adaptive_controller.cpp` | L1 nominal inertia를 기존 값의 절반으로 변경 |
 | `src/modules/mc_rate_control/palletrone_params.yaml` | custom attitude D 기본값 0, 일회성 migration marker 추가 |
 | `boards/px4/fmu-v6x/init/rc.board_defaults` | AUX 1–4 DShot600, gain/AUX 설정 일회성 migration |
 | `BUILD_PIXHAWK6X.sh` | clean build 및 결과 파일 검증 스크립트 |
