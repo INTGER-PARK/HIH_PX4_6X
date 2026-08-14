@@ -43,6 +43,7 @@ set(msg_files
 	CustomControlMode.msg
 	CustomDt.msg
 	L1AdaptiveStatus.msg
+	PalletroneMobStatus.msg
 	ServoAngle.msg
 	ServoCommand.msg
 	ThrustCommand.msg

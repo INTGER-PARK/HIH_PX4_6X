@@ -78,11 +78,25 @@ function(px4_add_git_submodule)
 	string(REPLACE "/" "_" NAME ${PATH})
 	string(REPLACE "." "_" NAME ${NAME})
 
+	# Some downstream PX4 repositories vendor dependency sources as regular
+	# tracked files while retaining their entries in .gitmodules. In that layout
+	# there is intentionally no nested .git metadata to use as a Ninja input.
+	# Keep the metadata dependency for genuine submodules, but allow an already
+	# populated vendored source tree to build without manufacturing a fake .git.
+	set(SUBMODULE_DEPENDS ${PX4_SOURCE_DIR}/.gitmodules)
+	set(SUBMODULE_GIT_METADATA ${PX4_SOURCE_DIR}/${REL_PATH}/.git)
+
+	if(EXISTS ${SUBMODULE_GIT_METADATA})
+		list(APPEND SUBMODULE_DEPENDS ${SUBMODULE_GIT_METADATA})
+	else()
+		message(STATUS "Using vendored dependency sources without Git metadata: ${REL_PATH}")
+	endif()
+
 	add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/git_init_${NAME}.stamp
 		COMMAND Tools/check_submodules.sh ${REL_PATH}
 		COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/git_init_${NAME}.stamp
-		DEPENDS ${PX4_SOURCE_DIR}/.gitmodules ${PATH}/.git
-		COMMENT "git submodule ${REL_PATH}"
+		DEPENDS ${SUBMODULE_DEPENDS}
+		COMMENT "git dependency ${REL_PATH}"
 		WORKING_DIRECTORY ${PX4_SOURCE_DIR}
 		USES_TERMINAL
 		)

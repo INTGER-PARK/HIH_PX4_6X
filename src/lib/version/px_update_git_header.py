@@ -124,6 +124,13 @@ if (os.path.exists('src/modules/mavlink/mavlink/.git')):
 #define MAVLINK_LIB_GIT_VERSION_STR  "{mavlink_git_version}"
 #define MAVLINK_LIB_GIT_VERSION_BINARY 0x{mavlink_git_version_short}
 """
+else:
+    # MAVLink is vendored without nested Git metadata in this repository.
+    # Preserve the public version API with an explicit unknown value.
+    header += """
+#define MAVLINK_LIB_GIT_VERSION_STR  "unknown"
+#define MAVLINK_LIB_GIT_VERSION_BINARY 0x0000000000000000
+"""
 
 
 # NuttX
@@ -144,6 +151,15 @@ if (os.path.exists('platforms/nuttx/NuttX/nuttx/.git')):
 #define NUTTX_GIT_VERSION_STR  "{nuttx_git_version}"
 #define NUTTX_GIT_VERSION_BINARY 0x{nuttx_git_version_short}
 #define NUTTX_GIT_TAG_STR  "{nuttx_git_tag}"
+"""
+else:
+    # This downstream repository vendors NuttX as regular tracked files, so
+    # there is no nested Git commit or tag to report. Keep the version API
+    # available with an explicit unknown value instead of breaking the build.
+    header += """
+#define NUTTX_GIT_VERSION_STR  "unknown"
+#define NUTTX_GIT_VERSION_BINARY 0x0000000000000000
+#define NUTTX_GIT_TAG_STR  "v0.0.0"
 """
 
 

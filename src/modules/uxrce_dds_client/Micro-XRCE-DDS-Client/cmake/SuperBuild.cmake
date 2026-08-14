@@ -27,11 +27,20 @@ if(NOT UCLIENT_BUILD_MICROCDR)
 endif()
 
 if(NOT microcdr_FOUND)
+    set(_microcdr_source_args
+        GIT_REPOSITORY https://github.com/eProsima/Micro-CDR.git
+        GIT_TAG ${_microcdr_tag}
+    )
+
+    set(_vendored_microcdr_dir ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/Micro-CDR)
+
+    if(EXISTS ${_vendored_microcdr_dir}/CMakeLists.txt)
+        set(_microcdr_source_args SOURCE_DIR ${_vendored_microcdr_dir})
+        message(STATUS "Using vendored Micro-CDR ${_microcdr_version}: ${_vendored_microcdr_dir}")
+    endif()
+
     ExternalProject_Add(microcdr
-        GIT_REPOSITORY
-            https://github.com/eProsima/Micro-CDR.git
-        GIT_TAG
-            ${_microcdr_tag}
+        ${_microcdr_source_args}
         PREFIX
             ${PROJECT_BINARY_DIR}/microcdr
         INSTALL_DIR

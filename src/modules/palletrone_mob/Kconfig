@@ -1,0 +1,5 @@
+menuconfig MODULES_PALLETRONE_MOB
+	bool "palletrone_mob"
+	default n
+	---help---
+		Enable the publish-only Palletrone momentum observer.

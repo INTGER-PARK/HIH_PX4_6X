@@ -108,6 +108,8 @@ src/systemcmds/topic_listener/listener_generated.cpp
 
 # colcon
 log/
+!src/modules/uxrce_dds_client/Micro-XRCE-DDS-Client/src/c/core/log/
+!src/modules/uxrce_dds_client/Micro-XRCE-DDS-Client/src/c/core/log/**
 keys/
 
 # metadata

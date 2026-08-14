@@ -4,6 +4,10 @@
 #
 #####
 publications:
+  - topic: /fmu/out/palletrone_mob_status
+    type: px4_msgs::msg::PalletroneMobStatus
+    rate_limit: 100.
+
   - topic: /fmu/out/trajectory_setpoint
     type: px4_msgs::msg::TrajectorySetpoint
 

@@ -1,0 +1,108 @@
+module_name: Palletrone Momentum Observer
+
+parameters:
+  - group: Palletrone MOB
+    definitions:
+      PMOB_EN:
+        description:
+          short: Enable publish-only Palletrone momentum observer
+        type: boolean
+        default: false
+      PMOB_MASS:
+        description: {short: Modeled vehicle mass}
+        type: float
+        unit: kg
+        min: 0.1
+        max: 100
+        default: 4.0
+      PMOB_IXX:
+        description: {short: Body inertia Jxx}
+        type: float
+        unit: kg m^2
+        min: 0.0001
+        default: 0.0192
+      PMOB_IYY:
+        description: {short: Body inertia Jyy}
+        type: float
+        unit: kg m^2
+        min: 0.0001
+        default: 0.02125
+      PMOB_IZZ:
+        description: {short: Body inertia Jzz}
+        type: float
+        unit: kg m^2
+        min: 0.0001
+        default: 0.0282
+      PMOB_IXY:
+        description: {short: Body inertia Jxy}
+        type: float
+        unit: kg m^2
+        default: 0.0
+      PMOB_IXZ:
+        description: {short: Body inertia Jxz}
+        type: float
+        unit: kg m^2
+        default: 0.0
+      PMOB_IYZ:
+        description: {short: Body inertia Jyz}
+        type: float
+        unit: kg m^2
+        default: 0.0
+      PMOB_F_WN:
+        description: {short: Force observer natural frequency}
+        type: float
+        unit: rad/s
+        min: 0.1
+        max: 100
+        default: 6.0
+      PMOB_F_ZETA:
+        description: {short: Force observer damping ratio}
+        type: float
+        min: 0.1
+        max: 5
+        default: 0.9
+      PMOB_T_WN:
+        description: {short: Torque observer natural frequency}
+        type: float
+        unit: rad/s
+        min: 0.1
+        max: 100
+        default: 10.0
+      PMOB_T_ZETA:
+        description: {short: Torque observer damping ratio}
+        type: float
+        min: 0.1
+        max: 5
+        default: 0.9
+      PMOB_ODOM_TO:
+        description: {short: Odometry reception timeout}
+        type: float
+        unit: s
+        min: 0.01
+        max: 2
+        default: 0.1
+      PMOB_ACT_TO:
+        description: {short: Physical thrust command timeout}
+        type: float
+        unit: s
+        min: 0.01
+        max: 2
+        default: 0.1
+      PMOB_SERVO_TO:
+        description: {short: Actual servo angle timeout}
+        type: float
+        unit: s
+        min: 0.01
+        max: 2
+        default: 0.1
+      PMOB_WARMUP:
+        description: {short: Invalid output interval after reset}
+        type: float
+        unit: s
+        min: 0
+        max: 10
+        default: 1.0
+      PMOB_ARM_ONLY:
+        description: {short: Only validate estimates while armed}
+        type: boolean
+        default: true

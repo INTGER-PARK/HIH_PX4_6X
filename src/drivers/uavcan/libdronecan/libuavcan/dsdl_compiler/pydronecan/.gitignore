@@ -80,3 +80,5 @@ target/
 
 # we don't have dsdl in this repo any more
 dsdl/
+!dronecan/dsdl/
+!dronecan/dsdl/**

@@ -26,6 +26,21 @@ static constexpr float kVehicleMassKg = 4.0f;
 // Assumption: X-frame CoG-to-motor-axis distance.
 static constexpr float kArmLengthM = 0.181f;
 
+// Rotor hubs are an X configuration about the modeled CoM/body origin.
+// FRD order matches allocator/PX4 motor indices: front-left, rear-left,
+// rear-right, front-right. The rotor plane is 5 mm above the origin.
+static constexpr float kRotorVerticalOffsetM = -0.005f;
+static constexpr float kRotorReactionTorqueRatioM = 0.01f;
+static constexpr float kInvSqrt2 = 0.7071067811865475f;
+// Positive actual servo angle horizontal thrust signs in FRD. At zero angle
+// every rotor thrust direction is [0, 0, -1] (upward).
+static constexpr float kTiltDirectionXY[4][2] = {
+	{ 1.f,  1.f}, { 1.f, -1.f}, {-1.f, -1.f}, {-1.f,  1.f}
+};
+
+// Reaction torque is sigma * kappa * T * thrust_direction.
+static constexpr float kRotorReactionSign[4] = {1.f, -1.f, 1.f, -1.f};
+
 // 이전 8 kg 기체 관성: [0.0768, 0.0871, 0.1130] kg*m^2
 // 변경 4 kg 기체: 요청대로 질량 비례 근사로 각 축을 정확히 1/4 적용.
 static constexpr float kInertiaXxKgM2 = 0.0192f;
