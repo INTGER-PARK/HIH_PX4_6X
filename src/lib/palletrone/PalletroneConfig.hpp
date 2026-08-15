@@ -19,7 +19,9 @@ namespace palletrone
 
 // 이전 대형 기체: vehicle_mass = 8.0f kg
 // 변경 미니 기체: mini_vehicle_mass = 4.0f kg
-static constexpr float kVehicleMassKg = 4.0f;
+static constexpr float Drone_MassKg = 1.5f;
+static constexpr float Battery_MassKg = 0.0f;
+static constexpr float kVehicleMassKg = Drone_MassKg + Battery_MassKg;
 
 // 이전 대형 기체: arm_length = 0.230f m
 // 변경 미니 기체: mini_arm_length = 0.181f m
@@ -30,7 +32,7 @@ static constexpr float kArmLengthM = 0.181f;
 // FRD order matches allocator/PX4 motor indices. The user-confirmed x/y
 // signs are M1 (+x,-y), M2 (-x,-y), M3 (-x,+y), M4 (+x,+y).
 // The rotor plane is 5 mm above the origin.
-static constexpr float kRotorVerticalOffsetM = -0.005f;
+static constexpr float kRotorVerticalOffsetM = 0.0f;
 static constexpr float kRotorReactionTorqueRatioM = 0.01f;
 static constexpr float kInvSqrt2 = 0.7071067811865475f;
 
@@ -62,10 +64,8 @@ static constexpr float kMotorMinimumForceN = 1.00f;
 // --------------------------------------------------------------------------
 // T-Motor F60 PRO V-LV 2020KV + 6S propulsion model
 // --------------------------------------------------------------------------
-
-// 예정 프로펠러는 5540 3엽이지만 제공된 제조사 자료에는 해당 조합의 정확한
-// 수치표가 없으므로, 제공 자료의 T5147-3 @ 25.2 V 데이터를 초기 proxy로 사용.
-// 실제 5540 3엽 장착 후 추력 스탠드 측정값으로 아래 표를 교체해야 한다.
+// 제공 자료의 T5147-3 @ 25.2 V 데이터를 초기 proxy로 사용.
+// 실제 5540 3엽 장착 후 추력 스탠드 측정값으로 아래 표를 교체.
 static constexpr int kMotorModelPointCount = 6;
 
 static constexpr float kMotorThrottleTable[kMotorModelPointCount] = {
@@ -80,23 +80,22 @@ static constexpr float kMotorThrottleTable[kMotorModelPointCount] = {
 // 제조사 gf 데이터를 9.80665 m/s^2로 N 단위 변환.
 static constexpr float kMotorThrustTableN[kMotorModelPointCount] = {
 	0.0f,
-	2.76743663f,   // 282.2 gf @ 20%
-	6.83033173f,   // 696.5 gf @ 40%
-	10.55293606f,  // 1076.1 gf @ 60%
-	16.37024084f,  // 1669.3 gf @ 80%
-	20.43215527f   // 2083.5 gf @ 100%
+	2.82743663f,   // 282.2 gf @ 20%
+	6.96533173f,   // 696.5 gf @ 40%
+	10.76193606f,  // 1076.1 gf @ 60%
+	16.6934084f,  // 1669.3 gf @ 80%
+	20.83515527f   // 2083.5 gf @ 100%
 };
 
-// 이전 모델: maximum_thrust_limit = 0.85f
-// 변경 미니 모델: mini_model_max_throttle = 0.80f
-static constexpr float kMotorThrottleLimit = 0.80f;
+// mini_model_max_throttle = 0.85f
+static constexpr float kMotorThrottleLimit = 0.85f;
 
 static constexpr float kMotorFullThrustN = kMotorThrustTableN[5];
 
-// 요청 사항: 확인된 최대 정적 추력의 80%까지만 allocator가 요구하도록 제한.
-// DShot 실제 명령도 별도로 0.80에 제한하여 두 단계로 보호한다.
+// 요청 사항: 확인된 최대 정적 추력의 85%까지만 allocator가 요구하도록 제한.
+// DShot 실제 명령도 별도로 0.85에 제한하여 두 단계로 보호한다.
 static constexpr float kMotorMaxUsableThrustN = kMotorThrottleLimit * kMotorFullThrustN;
-static constexpr float kTotalMaxUsableThrustN = 4.0f * kMotorMaxUsableThrustN;
+static constexpr float kTotalMaxUsableThrustN = 4.0f * kMotorMaxUsableThrustN; // 4개 모터 합
 
 // 이 소스 트리의 PX4 DShot 기본값. 실제 변환에는 런타임 DSHOT_MIN을 읽는다.
 static constexpr float kDshotMinDefault = 0.055f;

@@ -40,8 +40,12 @@ public:
 	/**
 	 * Advance the extended momentum observer by one variable-duration sample.
 	 * This implements a bilinear/Tustin discretization independently on x/y/z:
+	 *   p_dot = b + w_ext
+	 *   e_p = p - p_hat
 	 *   p_hat_dot = b + w_hat + 2*zeta*wn*(p-p_hat)
 	 *   w_hat_dot = wn^2*(p-p_hat)
+	 * Here w_hat is the estimated residual/external wrench; ideally
+	 * w_hat -> w_ext = p_dot - b.
 	 * It performs no numerical differentiation and rejects invalid inputs.
 	 * @param momentum current measured generalized momentum p
 	 * @param known_dynamics modeled momentum derivative b without external wrench
@@ -57,6 +61,7 @@ public:
 			return false;
 		}
 
+		// Observer gains: l1 = 2*zeta*wn, l2 = wn^2.
 		const float l1 = 2.f * damping_ratio * natural_frequency;
 		const float l2 = natural_frequency * natural_frequency;
 		const float h = 0.5f * dt;
@@ -81,6 +86,7 @@ public:
 			_w_hat(axis) = w_next;
 		}
 
+		// Momentum estimation error: e_p = p - p_hat.
 		_error = momentum - _p_hat;
 		return _error.isAllFinite() && _w_hat.isAllFinite();
 	}

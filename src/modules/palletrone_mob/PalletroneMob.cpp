@@ -299,7 +299,9 @@ void PalletroneMob::Run()
 
 	const float mass = _param_mass.get();
 	const Vector3f omega{_odometry.angular_velocity};
+	// Linear momentum: p = m*v_b.
 	const Vector3f linear_momentum = velocity_body * mass;
+	// Angular momentum: h = J*omega.
 	const Vector3f angular_momentum{
 		_param_ixx.get() * omega(0) + _param_ixy.get() * omega(1) + _param_ixz.get() * omega(2),
 		_param_ixy.get() * omega(0) + _param_iyy.get() * omega(1) + _param_iyz.get() * omega(2),
@@ -327,7 +329,9 @@ void PalletroneMob::Run()
 
 		const Dcmf rotation_local_from_body{quaternion};
 		const Vector3f gravity_body = rotation_local_from_body.transpose() * Vector3f{0.f, 0.f, CONSTANTS_ONE_G};
+		// p_dot = b_linear + f_ext, b_linear = f_act + m*g_b - omega x p.
 		const Vector3f b_linear = actuator_force + gravity_body * mass - omega.cross(velocity_body) * mass;
+		// h_dot = b_angular + tau_ext, b_angular = tau_act - omega x h.
 		const Vector3f b_angular = actuator_torque - omega.cross(angular_momentum);
 
 		if (force_input_valid) {
