@@ -57,7 +57,14 @@ private:
 			    const matrix::Vector3f &angular_momentum, hrt_abstime now);
 
 	/** Validate mass, gains, and positive definiteness of the inertia matrix. */
-	bool parametersValid() const;
+	bool modelParametersValid() const;
+	bool biasParametersValid() const;
+	bool forceGainsValid() const;
+	bool torqueGainsValid() const;
+	matrix::Vector3f forceNaturalFrequency() const;
+	matrix::Vector3f forceDampingRatio() const;
+	matrix::Vector3f torqueNaturalFrequency() const;
+	matrix::Vector3f torqueDampingRatio() const;
 
 	/**
 	 * Reconstruct known body-FRD actuator force [N] and torque [N m] from the
@@ -107,10 +114,24 @@ private:
 		(ParamFloat<px4::params::PMOB_IXY>) _param_ixy,
 		(ParamFloat<px4::params::PMOB_IXZ>) _param_ixz,
 		(ParamFloat<px4::params::PMOB_IYZ>) _param_iyz,
-		(ParamFloat<px4::params::PMOB_F_WN>) _param_force_wn,
-		(ParamFloat<px4::params::PMOB_F_ZETA>) _param_force_zeta,
-		(ParamFloat<px4::params::PMOB_T_WN>) _param_torque_wn,
-		(ParamFloat<px4::params::PMOB_T_ZETA>) _param_torque_zeta,
+		(ParamFloat<px4::params::PMOB_FX_WN>) _param_force_x_wn,
+		(ParamFloat<px4::params::PMOB_FX_ZETA>) _param_force_x_zeta,
+		(ParamFloat<px4::params::PMOB_FY_WN>) _param_force_y_wn,
+		(ParamFloat<px4::params::PMOB_FY_ZETA>) _param_force_y_zeta,
+		(ParamFloat<px4::params::PMOB_FZ_WN>) _param_force_z_wn,
+		(ParamFloat<px4::params::PMOB_FZ_ZETA>) _param_force_z_zeta,
+		(ParamFloat<px4::params::PMOB_TX_WN>) _param_torque_x_wn,
+		(ParamFloat<px4::params::PMOB_TX_ZETA>) _param_torque_x_zeta,
+		(ParamFloat<px4::params::PMOB_TY_WN>) _param_torque_y_wn,
+		(ParamFloat<px4::params::PMOB_TY_ZETA>) _param_torque_y_zeta,
+		(ParamFloat<px4::params::PMOB_TZ_WN>) _param_torque_z_wn,
+		(ParamFloat<px4::params::PMOB_TZ_ZETA>) _param_torque_z_zeta,
+		(ParamFloat<px4::params::PMOB_BIAS_FX>) _param_bias_force_x,
+		(ParamFloat<px4::params::PMOB_BIAS_FY>) _param_bias_force_y,
+		(ParamFloat<px4::params::PMOB_BIAS_FZ>) _param_bias_force_z,
+		(ParamFloat<px4::params::PMOB_BIAS_TX>) _param_bias_torque_x,
+		(ParamFloat<px4::params::PMOB_BIAS_TY>) _param_bias_torque_y,
+		(ParamFloat<px4::params::PMOB_BIAS_TZ>) _param_bias_torque_z,
 		(ParamFloat<px4::params::PMOB_ODOM_TO>) _param_odom_timeout,
 		(ParamFloat<px4::params::PMOB_ACT_TO>) _param_actuator_timeout,
 		(ParamFloat<px4::params::PMOB_SERVO_TO>) _param_servo_timeout,

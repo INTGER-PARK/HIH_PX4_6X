@@ -44,6 +44,8 @@ set(msg_files
 	CustomDt.msg
 	L1AdaptiveStatus.msg
 	PalletroneMobStatus.msg
+	PalletroneAdmittanceCommand.msg
+	PalletroneAdmittanceStatus.msg
 	ServoAngle.msg
 	ServoCommand.msg
 	ThrustCommand.msg

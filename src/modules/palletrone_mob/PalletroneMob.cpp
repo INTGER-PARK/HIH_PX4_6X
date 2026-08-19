@@ -1,7 +1,7 @@
 #include "PalletroneMob.hpp"
+#include "palletrone_mob_physical_parms.hpp"
 
 #include <lib/geo/geo.h>
-#include <lib/palletrone/PalletroneConfig.hpp>
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/log.h>
 
@@ -9,6 +9,23 @@ using namespace time_literals;
 using matrix::Dcmf;
 using matrix::Quatf;
 using matrix::Vector3f;
+namespace physical_parms = palletrone_mob::physical_parms;
+
+
+namespace //INDEX용
+{
+constexpr int kForceAxisX = 0;
+constexpr int kForceAxisY = 1;
+constexpr int kForceAxisZ = 2;
+constexpr int kTorqueAxisX = 0;
+constexpr int kTorqueAxisY = 1;
+constexpr int kTorqueAxisZ = 2;
+
+bool floatChanged(float previous, float current)
+{
+	return !PX4_ISFINITE(previous) || !PX4_ISFINITE(current) || fabsf(previous - current) > 0.f;
+}
+}
 
 ModuleBase::Descriptor PalletroneMob::desc{task_spawn, custom_command, print_usage};
 
@@ -49,9 +66,9 @@ void PalletroneMob::start()
 	ScheduleOnInterval(10_ms);
 }
 
-// Reject parameter sets that would make momentum or observer dynamics invalid.
+// Reject model parameter sets that would make momentum dynamics invalid.
 // Sylvester's criterion checks that the symmetric 3x3 inertia is positive definite.
-bool PalletroneMob::parametersValid() const
+bool PalletroneMob::modelParametersValid() const
 {
 	const float ixx = _param_ixx.get();
 	const float iyy = _param_iyy.get();
@@ -66,16 +83,73 @@ bool PalletroneMob::parametersValid() const
 	return PX4_ISFINITE(_param_mass.get()) && _param_mass.get() > 0.f
 	       && PX4_ISFINITE(ixx) && PX4_ISFINITE(iyy) && PX4_ISFINITE(izz)
 	       && PX4_ISFINITE(ixy) && PX4_ISFINITE(ixz) && PX4_ISFINITE(iyz)
-	       && ixx > 0.f && minor2 > 0.f && determinant > 0.f
-	       && PX4_ISFINITE(_param_force_wn.get()) && _param_force_wn.get() > 0.f
-	       && PX4_ISFINITE(_param_force_zeta.get()) && _param_force_zeta.get() > 0.f
-	       && PX4_ISFINITE(_param_torque_wn.get()) && _param_torque_wn.get() > 0.f
-	       && PX4_ISFINITE(_param_torque_zeta.get()) && _param_torque_zeta.get() > 0.f;
+	       && ixx > 0.f && minor2 > 0.f && determinant > 0.f;
+}
+
+bool PalletroneMob::biasParametersValid() const
+{
+	return PX4_ISFINITE(_param_bias_force_x.get()) && PX4_ISFINITE(_param_bias_force_y.get())
+	       && PX4_ISFINITE(_param_bias_force_z.get()) && PX4_ISFINITE(_param_bias_torque_x.get())
+	       && PX4_ISFINITE(_param_bias_torque_y.get()) && PX4_ISFINITE(_param_bias_torque_z.get());
+}
+
+bool PalletroneMob::forceGainsValid() const
+{
+	const Vector3f wn = forceNaturalFrequency();
+	const Vector3f zeta = forceDampingRatio();
+	return wn.isAllFinite() && zeta.isAllFinite()
+	       && wn(kForceAxisX) > 0.f && wn(kForceAxisY) > 0.f && wn(kForceAxisZ) > 0.f
+	       && zeta(kForceAxisX) > 0.f && zeta(kForceAxisY) > 0.f && zeta(kForceAxisZ) > 0.f;
+}
+
+bool PalletroneMob::torqueGainsValid() const
+{
+	const Vector3f wn = torqueNaturalFrequency();
+	const Vector3f zeta = torqueDampingRatio();
+	return wn.isAllFinite() && zeta.isAllFinite()
+	       && wn(kTorqueAxisX) > 0.f && wn(kTorqueAxisY) > 0.f && wn(kTorqueAxisZ) > 0.f
+	       && zeta(kTorqueAxisX) > 0.f && zeta(kTorqueAxisY) > 0.f && zeta(kTorqueAxisZ) > 0.f;
+}
+
+Vector3f PalletroneMob::forceNaturalFrequency() const
+{
+	return Vector3f{
+		_param_force_x_wn.get(),
+		_param_force_y_wn.get(),
+		_param_force_z_wn.get()
+	};
+}
+
+Vector3f PalletroneMob::forceDampingRatio() const
+{
+	return Vector3f{
+		_param_force_x_zeta.get(),
+		_param_force_y_zeta.get(),
+		_param_force_z_zeta.get()
+	};
+}
+
+Vector3f PalletroneMob::torqueNaturalFrequency() const
+{
+	return Vector3f{
+		_param_torque_x_wn.get(),
+		_param_torque_y_wn.get(),
+		_param_torque_z_wn.get()
+	};
+}
+
+Vector3f PalletroneMob::torqueDampingRatio() const
+{
+	return Vector3f{
+		_param_torque_x_zeta.get(),
+		_param_torque_y_zeta.get(),
+		_param_torque_z_zeta.get()
+	};
 }
 
 // Convert final motor thrust [N] and actual DYNAMIXEL angle [rad] to the known
 // body-FRD actuator wrench at the modeled CoM. Rotor positions and positive
-// tilt directions use the user-confirmed FRD signs in PalletroneConfig.
+// tilt directions use the user-confirmed FRD signs in palletrone_mob_physical_parms.
 void PalletroneMob::computeActuatorWrench(Vector3f &force, Vector3f &torque) const
 {
 	force.setZero();
@@ -85,22 +159,22 @@ void PalletroneMob::computeActuatorWrench(Vector3f &force, Vector3f &torque) con
 		const float sine = sinf(_servo_angle_rad[i]);
 		const float cosine = cosf(_servo_angle_rad[i]);
 		const Vector3f direction{
-			palletrone::kTiltDirectionXY[i][0] * palletrone::kInvSqrt2 * sine,
-			palletrone::kTiltDirectionXY[i][1] * palletrone::kInvSqrt2 * sine,
+			physical_parms::kTiltDirectionXY[i][0] * physical_parms::kInvSqrt2 * sine,
+			physical_parms::kTiltDirectionXY[i][1] * physical_parms::kInvSqrt2 * sine,
 			-cosine
 		};
 		const Vector3f rotor_force = direction * _motor_thrust_n[i];
 		force += rotor_force;
 
-		const float arm_xy = palletrone::kArmLengthM * palletrone::kInvSqrt2;
+		const float arm_xy = physical_parms::kArmLengthM * physical_parms::kInvSqrt2;
 		const Vector3f rotor_position{
-			palletrone::kRotorPositionXY[i][0] * arm_xy,
-			palletrone::kRotorPositionXY[i][1] * arm_xy,
-			palletrone::kRotorVerticalOffsetM
+			physical_parms::kRotorPositionXY[i][0] * arm_xy,
+			physical_parms::kRotorPositionXY[i][1] * arm_xy,
+			physical_parms::kRotorVerticalOffsetM
 		};
-		const float kappa = palletrone::kRotorReactionTorqueRatioM;
+		const float kappa = physical_parms::kRotorReactionTorqueRatioM;
 		const Vector3f reaction_torque = direction
-			* (palletrone::kRotorReactionSign[i] * kappa * _motor_thrust_n[i]);
+			* (physical_parms::kRotorReactionSign[i] * kappa * _motor_thrust_n[i]);
 		torque += rotor_position.cross(rotor_force) + reaction_torque;
 	}
 }
@@ -134,8 +208,24 @@ void PalletroneMob::publishStatus(hrt_abstime now, uint32_t flags, float dt,
 		&& (now - _warmup_started) >= static_cast<hrt_abstime>(_param_warmup.get() * 1e6f);
 	status.status_flags = flags;
 	status.reset_count = _reset_count;
-	_force_observer.estimate().copyTo(status.external_force);
-	_torque_observer.estimate().copyTo(status.external_torque);
+	const Vector3f raw_force = _force_observer.estimate();
+	const Vector3f raw_torque = _torque_observer.estimate();
+	Vector3f corrected_force{NAN, NAN, NAN};
+	Vector3f corrected_torque{NAN, NAN, NAN};
+
+	// Bias is output processing only. Invalid values are rejected instead of
+	// contaminating the published wrench; observer state and dynamics are untouched.
+	if (biasParametersValid() && raw_force.isAllFinite() && raw_torque.isAllFinite()) {
+		const Vector3f force_bias{_param_bias_force_x.get(), _param_bias_force_y.get(), _param_bias_force_z.get()};
+		const Vector3f torque_bias{_param_bias_torque_x.get(), _param_bias_torque_y.get(), _param_bias_torque_z.get()};
+		corrected_force = raw_force - force_bias;
+		corrected_torque = raw_torque - torque_bias;
+	}
+
+	raw_force.copyTo(status.external_force);
+	raw_torque.copyTo(status.external_torque);
+	corrected_force.copyTo(status.external_force_corrected);
+	corrected_torque.copyTo(status.external_torque_corrected);
 	actuator_force.copyTo(status.known_actuator_force);
 	actuator_torque.copyTo(status.known_actuator_torque);
 	_force_observer.error().copyTo(status.linear_momentum_error);
@@ -165,8 +255,25 @@ void PalletroneMob::Run()
 	if (_parameter_update_sub.updated()) {
 		parameter_update_s update{};
 		_parameter_update_sub.copy(&update);
+		const float old_mass = _param_mass.get();
+		const float old_ixx = _param_ixx.get();
+		const float old_iyy = _param_iyy.get();
+		const float old_izz = _param_izz.get();
+		const float old_ixy = _param_ixy.get();
+		const float old_ixz = _param_ixz.get();
+		const float old_iyz = _param_iyz.get();
 		updateParams();
-		_active_last_cycle = false;
+		const bool momentum_model_changed = floatChanged(old_mass, _param_mass.get())
+			|| floatChanged(old_ixx, _param_ixx.get())
+			|| floatChanged(old_iyy, _param_iyy.get())
+			|| floatChanged(old_izz, _param_izz.get())
+			|| floatChanged(old_ixy, _param_ixy.get())
+			|| floatChanged(old_ixz, _param_ixz.get())
+			|| floatChanged(old_iyz, _param_iyz.get());
+
+		if (momentum_model_changed) {
+			_active_last_cycle = false;
+		}
 	}
 
 	vehicle_status_s vehicle_status{};
@@ -222,7 +329,12 @@ void PalletroneMob::Run()
 	computeActuatorWrench(actuator_force, actuator_torque);
 
 	const bool enabled = _param_enable.get();
-	const bool parameter_valid = parametersValid();
+	const bool model_parameters_valid = modelParametersValid();
+	const bool force_gains_valid = forceGainsValid();
+	const bool torque_gains_valid = torqueGainsValid();
+	const bool bias_parameters_valid = biasParametersValid();
+	const bool parameter_valid = model_parameters_valid && force_gains_valid && torque_gains_valid
+		&& bias_parameters_valid;
 	const bool actuator_fresh = _actuator_received != 0
 		&& (now - _actuator_received) <= static_cast<hrt_abstime>(_param_actuator_timeout.get() * 1e6f);
 	const bool servo_fresh = _servo_received != 0
@@ -276,10 +388,10 @@ void PalletroneMob::Run()
 	}
 
 	const bool arm_gate = !_param_arm_only.get() || _armed;
-	const bool common_valid = enabled && parameter_valid && odometry_fresh && attitude_valid
+	const bool common_valid = enabled && model_parameters_valid && bias_parameters_valid && odometry_fresh && attitude_valid
 		&& actuator_fresh && servo_fresh && arm_gate;
-	const bool force_input_valid = common_valid && velocity_valid;
-	const bool torque_input_valid = common_valid && angular_velocity_valid;
+	const bool force_input_valid = common_valid && force_gains_valid && velocity_valid;
+	const bool torque_input_valid = common_valid && torque_gains_valid && angular_velocity_valid;
 	float dt = 0.f;
 	bool dt_valid = false;
 
@@ -327,6 +439,11 @@ void PalletroneMob::Run()
 			resetObservers(linear_momentum, angular_momentum, now);
 		}
 
+		const Vector3f force_wn = forceNaturalFrequency();
+		const Vector3f force_zeta = forceDampingRatio();
+		const Vector3f torque_wn = torqueNaturalFrequency();
+		const Vector3f torque_zeta = torqueDampingRatio();
+
 		const Dcmf rotation_local_from_body{quaternion};
 		const Vector3f gravity_body = rotation_local_from_body.transpose() * Vector3f{0.f, 0.f, CONSTANTS_ONE_G};
 		// p_dot = b_linear + f_ext, b_linear = f_act + m*g_b - omega x p.
@@ -336,12 +453,12 @@ void PalletroneMob::Run()
 
 		if (force_input_valid) {
 			force_updated = _force_observer.update(linear_momentum, b_linear, dt,
-							_param_force_wn.get(), _param_force_zeta.get());
+						       force_wn, force_zeta);
 		}
 
 		if (torque_input_valid) {
 			torque_updated = _torque_observer.update(angular_momentum, b_angular, dt,
-							  _param_torque_wn.get(), _param_torque_zeta.get());
+							torque_wn, torque_zeta);
 		}
 
 		_active_last_cycle = force_updated || torque_updated;

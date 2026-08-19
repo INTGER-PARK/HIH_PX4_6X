@@ -405,6 +405,8 @@ void MulticopterPositionControl::Run()
 		pitch = euler.theta();  // y
 		yaw   = euler.psi();    // z
 		matrix::Dcmf R(euler);
+		_rotation_local_body = R;
+		_attitude_valid = q.isAllFinite() && fabsf(q.norm() - 1.f) < 0.1f;
 		//imu_att(0) = _vehicle_attitude.
 		_control.updateAttitude(R);
 	}
@@ -423,8 +425,8 @@ void MulticopterPositionControl::Run()
 	//FROM SBUS
 	if (_manual_control_setpoint_sub.update(&rpyz_cmd)){
 
-		manual_setpoint(0) =  rpyz_cmd.pitch;//roundf(rpyz_cmd.pitch * 1000.0f) / 1000.0f;
-		manual_setpoint(1) =  rpyz_cmd.roll;//roundf(rpyz_cmd.roll  * 1000.0f) / 1000.0f;
+		manual_setpoint(0) =  rpyz_cmd.pitch*1.2f;//roundf(rpyz_cmd.pitch * 1000.0f) / 1000.0f; //여기 정수가 수정
+		manual_setpoint(1) =  rpyz_cmd.roll*1.2f;//roundf(rpyz_cmd.roll  * 1000.0f) / 1000.0f; 여기도 정수가 수정
 		manual_setpoint(2) = -rpyz_cmd.throttle;//roundf(rpyz_cmd.throttle * 1000.0f) / 1000.0f;
 		manual_setpoint(3) =  rpyz_cmd.yaw;//roundf(rpyz_cmd.yaw    * 1000.0f) / 1000.0f;
 
@@ -442,7 +444,7 @@ void MulticopterPositionControl::Run()
 
 
 	// if((double)manual_setpoint(2) > 0.0){manual_setpoint(2) = 0.0;}
-	float altitude_limit = 0.4f;
+	float altitude_limit = 0.7f; //고도
 
 	if(manual_setpoint(2)< - 0.4f){pose_z_setpoint -= 0.001f;}
 	else if(manual_setpoint(2)> 0.4f){pose_z_setpoint += 0.001f;}
@@ -555,8 +557,6 @@ void MulticopterPositionControl::Run()
 	// ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ //
 
 
-	_control.setInputSetpoint(pose_setpoint); // 여기가 translational desired position!
-
 	// FROM ROS SEUK. velocity command (feed forward)
 	if (_custom_command_velocity_mode_sub.update(&_custom_command_velocity_mode)) {
 
@@ -570,6 +570,14 @@ void MulticopterPositionControl::Run()
 	if (!_vehicle_control_mode.flag_armed) {
 	custom_command_velocity.zero();
 	}
+
+	// Single writer for the effective outer-loop reference. The existing cascade
+	// remains active; admittance never writes thrust, torque, allocator or actuators.
+	_admittance_manager.update(hrt_absolute_time(), dt, _rotation_local_body, _attitude_valid,
+		_vehicle_control_mode.flag_armed, _vehicle_control_mode.flag_control_position_enabled &&
+		_custom_control_mode.custom_mode_flag, _custom_control_mode.trajectory_flag,
+		pose_setpoint, custom_command_velocity);
+	_control.setInputSetpoint(pose_setpoint);
 
 	// PositionControl.cpp로 전달
 	_control.setVelocityFeedforward(custom_command_velocity);

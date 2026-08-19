@@ -1,0 +1,39 @@
+ H-Flow + IMU
+       |
+       v
+      EKF --------------------------> vehicle_odometry (local NED pose, FRD body velocity)
+       |                                      |
+       |                                      v
+ motor thrust_command + actual servo_angle -> second-order MOB (modeled CoM/body origin)
+                                                |
+                                      Fx, Fy, Fz, Tz (body FRD)
+                                                |
+ ROS 2 keyboard --10 Hz heartbeat--> uXRCE-DDS command subscriber
+                                                |
+                           +--------------------v-------------------+
+                           | Pixhawk safety/state machine           |
+                           | PADM master, command fresh, compatible |
+                           | mode, armed, attitude/MOB valid,       |
+                           | warmup complete, contact hysteresis    |
+                           +--------------------+-------------------+
+                                                |
+                                     4-DoF M/D/K admittance
+                                                |
+                           +--------------------v-------------------+
+ nominal reference ------>| single-writer reference manager       |
+                           | ACTIVE: effective pose + velocity      |
+                           | HANDOVER_DECEL: damping-only motion    |
+                           | -> atomic final-pose rebase -> HOLD    |
+                           +--------------------+-------------------+
+                                                |
+                existing position -> velocity -> attitude -> rate cascade
+                                                |
+                                      existing control allocator
+                                                |
+                                      +---------+---------+
+                                      v                   v
+                                   4 BLDC          4 DYNAMIXEL commands
+
+ Pixhawk palletrone_admittance_status -> uXRCE-DDS -> ROS 2 keyboard terminal
+
+ No admittance path writes motor/servo, thrust/torque, allocator output, or torque DOB.

@@ -76,7 +76,7 @@ void PositionControl::setAccelerationLimits(const float acc_horizontal, const fl
 void PositionControl::setThrustLimits(const float min, const float max)
 {
 	// make sure there's always enough thrust vector length to infer the attitude
-	_lim_thr_min = math::max(min, 0.5f);//math::max(min, 10e-4f);
+	_lim_thr_min = math::max(min, 0.7f);//math::max(min, 10e-4f);
 	_lim_thr_max = max;
 }
 
@@ -246,10 +246,9 @@ void PositionControl::_velocityControl(const float dt)
 	_acc_sp(1) = math::constrain(_acc_sp(1), -3.0f, 3.0f);
 	_acc_sp(2) = math::constrain(_acc_sp(2), -_lim_acc_vertical, _lim_acc_vertical);
 
-	// 이전 대형 기체: mass = 8.0f kg
 	// 변경 미니 기체: mass = 4.0f kg (shared configuration)
 	
-	constexpr float mass = 4.0f;
+	constexpr float mass = 1.6f;
 
 
 

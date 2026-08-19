@@ -79,3 +79,5 @@ else
 fi
 
 safety_button start
+# Palletrone 6-DoF momentum observer
+palletrone_mob start

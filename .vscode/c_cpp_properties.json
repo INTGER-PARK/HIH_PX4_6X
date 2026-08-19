@@ -4,19 +4,19 @@
             "name": "PX4",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/parkjeongsu/HIH_PX4/boards/px4/fmu-v6x/src",
-                "/home/parkjeongsu/HIH_PX4/platforms/nuttx/src/px4/stm/stm32h7/include",
-                "/home/parkjeongsu/HIH_PX4/platforms/nuttx/NuttX/nuttx/include/"
+                "/home/jeongsu/HIH_PX4_6X/boards/px4/fmu-v6x/src",
+                "/home/jeongsu/HIH_PX4_6X/platforms/nuttx/src/px4/stm/stm32h7/include",
+                "/home/jeongsu/HIH_PX4_6X/platforms/nuttx/NuttX/nuttx/include/"
             ],
             "defines": [],
             "macFrameworkPath": [],
             "configurationProvider": "ms-vscode.cmake-tools",
             "cppStandard": "c++14",
             "cStandard": "c11",
-            "dotConfig": "/home/parkjeongsu/HIH_PX4/build/px4_fmu-v6x_default/NuttX/nuttx/.config",
+            "dotConfig": "/home/jeongsu/HIH_PX4_6X/build/px4_fmu-v6x_default/NuttX/nuttx/.config",
             "forcedInclude": [
-                 "/home/parkjeongsu/HIH_PX4/build/px4_fmu-v6x_default/px4_boardconfig.h",
-                 "/home/parkjeongsu/HIH_PX4/platforms/common/include/px4_platform_common/defines.h"
+                 "/home/jeongsu/HIH_PX4_6X/build/px4_fmu-v6x_default/px4_boardconfig.h",
+                 "/home/jeongsu/HIH_PX4_6X/platforms/common/include/px4_platform_common/defines.h"
                  ]
         }
     ],

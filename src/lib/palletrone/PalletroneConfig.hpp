@@ -19,7 +19,7 @@ namespace palletrone
 
 // 이전 대형 기체: vehicle_mass = 8.0f kg
 // 변경 미니 기체: mini_vehicle_mass = 4.0f kg
-static constexpr float Drone_MassKg = 1.5f;
+static constexpr float Drone_MassKg = 1.6f;
 static constexpr float Battery_MassKg = 0.0f;
 static constexpr float kVehicleMassKg = Drone_MassKg + Battery_MassKg;
 
@@ -43,16 +43,15 @@ static constexpr float kRotorPositionXY[4][2] = {
 };
 
 // Positive actual servo angle horizontal thrust signs in FRD. At zero angle
-// every rotor thrust direction is [0, 0, -1] (upward). Positive tilt is
-// radially outward using the same user-confirmed x/y signs as the rotor.
+// every rotor thrust direction is [0, 0, -1] (upward). These signs match the
+// CM4 servo allocation matrix that maps [Fx, Fy] to servo angles.
 static constexpr float kTiltDirectionXY[4][2] = {
-	{ 1.f, -1.f}, {-1.f, -1.f}, {-1.f,  1.f}, { 1.f,  1.f}
+	{ 1.f,  1.f}, { 1.f, -1.f}, {-1.f, -1.f}, {-1.f,  1.f}
 };
 
 // Reaction torque is sigma * kappa * T * thrust_direction.
 static constexpr float kRotorReactionSign[4] = {1.f, -1.f, 1.f, -1.f};
 
-// 이전 8 kg 기체 관성: [0.0768, 0.0871, 0.1130] kg*m^2
 // 변경 4 kg 기체: 요청대로 질량 비례 근사로 각 축을 정확히 1/4 적용.
 static constexpr float kInertiaXxKgM2 = 0.0192f;
 static constexpr float kInertiaYyKgM2 = 0.02125f;

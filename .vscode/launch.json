@@ -3,10 +3,10 @@
     "configurations": [
         {
             "name": "jlink (px4_fmu-v6x)",
-            "gdbPath": "CMAKE_GDB-NOTFOUND",
+            "gdbPath": "/usr/bin/gdb-multiarch",
             "device": "STM32H753II",
             "svdFile": "",
-            "rtos": "/home/parkjeongsu/HIH_PX4/platforms/nuttx/NuttX/nuttx/tools/jlink-nuttx.so",
+            "rtos": "/home/jeongsu/HIH_PX4_6X/platforms/nuttx/NuttX/nuttx/tools/jlink-nuttx.so",
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
             "type": "cortex-debug",
@@ -25,7 +25,7 @@
         },
         {
             "name": "stlink (px4_fmu-v6x)",
-            "gdbPath": "CMAKE_GDB-NOTFOUND",
+            "gdbPath": "/usr/bin/gdb-multiarch",
             "device": "STM32H753II",
             "svdFile": "",
             "executable": "${command:cmake.launchTargetPath}",
@@ -44,7 +44,7 @@
         },
         {
             "name": "blackmagic (px4_fmu-v6x)",
-            "gdbPath": "CMAKE_GDB-NOTFOUND",
+            "gdbPath": "/usr/bin/gdb-multiarch",
             "device": "STM32H753II",
             "svdFile": "",
             "executable": "${command:cmake.launchTargetPath}",

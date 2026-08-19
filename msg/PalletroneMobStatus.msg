@@ -29,8 +29,10 @@ uint32 FLAG_PARAMETER_INVALID = 4096
 uint32 status_flags
 uint32 reset_count
 
-float32[3] external_force                # [N] model-based external/residual force, FRD
-float32[3] external_torque               # [N m] model-based external/residual torque, FRD
+float32[3] external_force                # [N] raw external/residual force, BODY_FRD, modeled CoM/body origin
+float32[3] external_torque               # [N m] raw external/residual torque, BODY_FRD, modeled CoM/body origin
+float32[3] external_force_corrected      # [N] external_force - PMOB_BIAS_F*, BODY_FRD, modeled CoM/body origin
+float32[3] external_torque_corrected     # [N m] external_torque - PMOB_BIAS_T*, BODY_FRD, modeled CoM/body origin
 float32[3] known_actuator_force          # [N] command-based rotor force, FRD
 float32[3] known_actuator_torque         # [N m] command-based rotor torque about modeled CoM, FRD
 float32[3] linear_momentum_error          # [kg m/s] measured minus estimated momentum, FRD

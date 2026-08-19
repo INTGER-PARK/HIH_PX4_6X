@@ -5,6 +5,7 @@ px4_add_module(
 		PalletroneMob.cpp
 		PalletroneMob.hpp
 		MomentumObserver.hpp
+		palletrone_mob_physical_parms.hpp
 	MODULE_CONFIG
 		module.yaml
 	DEPENDS

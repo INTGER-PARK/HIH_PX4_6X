@@ -40,6 +40,7 @@
 
 #include "PositionControl/PositionControl.hpp"
 #include "GotoControl.hpp"
+#include "palletrone_admittance/AdmittanceManager.hpp"
 
 #include <lib/geo/geo.h>
 #include <matrix/matrix/math.hpp>
@@ -211,6 +212,9 @@ private:
 	control::BlockDerivative _vel_z_deriv; /**< velocity derivative in z */
 
 	PositionControl _control; ///< class for core PID position control
+	AdmittanceManager _admittance_manager;
+	matrix::Dcmf _rotation_local_body{};
+	bool _attitude_valid{false};
 	PositionControlStates _states;
 	GotoControl _goto_control; ///< class for handling smooth goto position setpoints
 

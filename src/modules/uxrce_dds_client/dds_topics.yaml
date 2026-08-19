@@ -4,6 +4,10 @@
 #
 #####
 publications:
+  - topic: /fmu/out/palletrone_admittance_status
+    type: px4_msgs::msg::PalletroneAdmittanceStatus
+    rate_limit: 10.
+
   - topic: /fmu/out/palletrone_mob_status
     type: px4_msgs::msg::PalletroneMobStatus
     rate_limit: 100.
@@ -40,9 +44,11 @@ publications:
 
   - topic: /fmu/out/center_of_mass
     type: px4_msgs::msg::CenterOfMass
+    rate_limit: 10.
 
   - topic: /fmu/out/torque_dhat
     type: px4_msgs::msg::TorqueDhat
+    rate_limit: 20.
 
   - topic: /fmu/out/actuator_motors
     type: px4_msgs::msg::ActuatorMotors
@@ -61,7 +67,7 @@ publications:
 
   - topic: /fmu/out/mode_completed
     type: px4_msgs::msg::ModeCompleted
-    rate_limit: 50.
+    rate_limit: 20.
 
   - topic: /fmu/out/battery_status
     type: px4_msgs::msg::BatteryStatus
@@ -81,7 +87,7 @@ publications:
 
   - topic: /fmu/out/manual_control_setpoint
     type: px4_msgs::msg::ManualControlSetpoint
-    rate_limit: 25.
+    rate_limit: 10.
 
   - topic: /fmu/out/message_format_response
     type: px4_msgs::msg::MessageFormatResponse
@@ -92,6 +98,7 @@ publications:
 
   - topic: /fmu/out/sensor_combined
     type: px4_msgs::msg::SensorCombined
+    rate_limit: 20.
 
   - topic: /fmu/out/timesync_status
     type: px4_msgs::msg::TimesyncStatus
@@ -124,7 +131,7 @@ publications:
 
   - topic: /fmu/out/vehicle_gps_position
     type: px4_msgs::msg::SensorGps
-    rate_limit: 50.
+    rate_limit: 10.
 
   - topic: /fmu/out/vehicle_local_position
     type: px4_msgs::msg::VehicleLocalPosition
@@ -170,6 +177,9 @@ publications:
 
 # Create uORB::Publication
 subscriptions:
+  - topic: /fmu/in/palletrone_admittance_command
+    type: px4_msgs::msg::PalletroneAdmittanceCommand
+
   - topic: /fmu/in/custom_control_mode
     type: px4_msgs::msg::CustomControlMode
 

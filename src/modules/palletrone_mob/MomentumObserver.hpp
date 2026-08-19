@@ -53,25 +53,37 @@ public:
 	 * @return true only when every updated state is finite
 	 */
 	bool update(const matrix::Vector3f &momentum, const matrix::Vector3f &known_dynamics,
-		    float dt, float natural_frequency, float damping_ratio)
+		    float dt, const matrix::Vector3f &natural_frequency, const matrix::Vector3f &damping_ratio)
 	{
 		if (!_initialized || !momentum.isAllFinite() || !known_dynamics.isAllFinite()
-		    || !PX4_ISFINITE(dt) || !PX4_ISFINITE(natural_frequency) || !PX4_ISFINITE(damping_ratio)
-		    || dt <= 0.f || natural_frequency <= 0.f || damping_ratio <= 0.f) {
+		    || !natural_frequency.isAllFinite() || !damping_ratio.isAllFinite()
+		    || !PX4_ISFINITE(dt) || dt <= 0.f) {
 			return false;
 		}
 
-		// Observer gains: l1 = 2*zeta*wn, l2 = wn^2.
-		const float l1 = 2.f * damping_ratio * natural_frequency;
-		const float l2 = natural_frequency * natural_frequency;
 		const float h = 0.5f * dt;
-		const float determinant = 1.f + h * l1 + h * h * l2;
-
-		if (!PX4_ISFINITE(determinant) || determinant <= 0.f) {
-			return false;
-		}
+		matrix::Vector3f next_p_hat{};
+		matrix::Vector3f next_w_hat{};
+		matrix::Vector3f next_error{};
 
 		for (int axis = 0; axis < 3; ++axis) {
+			const float wn = natural_frequency(axis);
+			const float zeta = damping_ratio(axis);
+
+			if (!PX4_ISFINITE(wn) || !PX4_ISFINITE(zeta) || wn <= 0.f || zeta <= 0.f) {
+				return false;
+			}
+
+			// Observer gains: l1 = 2*zeta*wn, l2 = wn^2.
+			const float l1 = 2.f * zeta * wn;
+			const float l2 = wn * wn;
+			const float determinant = 1.f + h * l1 + h * h * l2;
+
+			if (!PX4_ISFINITE(l1) || !PX4_ISFINITE(l2) || !PX4_ISFINITE(determinant)
+			    || determinant <= 0.f) {
+				return false;
+			}
+
 			const float rhs_p = (1.f - h * l1) * _p_hat(axis) + h * _w_hat(axis)
 					    + dt * (known_dynamics(axis) + l1 * momentum(axis));
 			const float rhs_w = -h * l2 * _p_hat(axis) + _w_hat(axis) + dt * l2 * momentum(axis);
@@ -82,13 +94,19 @@ public:
 				return false;
 			}
 
-			_p_hat(axis) = p_next;
-			_w_hat(axis) = w_next;
+			next_p_hat(axis) = p_next;
+			next_w_hat(axis) = w_next;
+			next_error(axis) = momentum(axis) - p_next;
 		}
 
-		// Momentum estimation error: e_p = p - p_hat.
-		_error = momentum - _p_hat;
-		return _error.isAllFinite() && _w_hat.isAllFinite();
+		if (!next_p_hat.isAllFinite() || !next_w_hat.isAllFinite() || !next_error.isAllFinite()) {
+			return false;
+		}
+
+		_p_hat = next_p_hat;
+		_w_hat = next_w_hat;
+		_error = next_error;
+		return true;
 	}
 
 	/** Return whether reset() has supplied an initial measured momentum. */

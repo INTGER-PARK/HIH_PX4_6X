@@ -1,0 +1,54 @@
+module_name: Palletrone Admittance
+parameters:
+- group: Palletrone Admittance
+  definitions:
+    PADM_EN: {description: {short: Master enable for Pixhawk admittance}, type: boolean, default: false}
+    PADM_ARM_ONLY: {description: {short: Require armed state}, type: boolean, default: true}
+    PADM_CMD_TO: {description: {short: Command heartbeat timeout}, type: float, unit: s, min: 0.1, default: 0.5}
+    PADM_MOB_TO: {description: {short: MOB reception timeout}, type: float, unit: s, min: 0.02, default: 0.1}
+    PADM_IN_T: {description: {short: Input blend-in time}, type: float, unit: s, min: 0, default: 0.25}
+    PADM_N_DES: {description: {short: Desired compressive normal force}, type: float, unit: N, min: 0.01, default: 2.0}
+    PADM_N_ON: {description: {short: Contact-on normal threshold}, type: float, unit: N, min: 0, default: 0.8}
+    PADM_N_OFF: {description: {short: Contact-off normal threshold}, type: float, unit: N, min: 0, default: 0.4}
+    PADM_N_ON_T: {description: {short: Contact-on dwell}, type: float, unit: s, min: 0, default: 0.2}
+    PADM_N_OFF_T: {description: {short: Contact-loss grace time}, type: float, unit: s, min: 0, default: 0.3}
+    PADM_N_EDB: {description: {short: Normal-force error deadband}, type: float, unit: N, min: 0, default: 0.1}
+    PADM_X_EN: {description: {short: Enable body X admittance}, type: boolean, default: true}
+    PADM_Y_EN: {description: {short: Enable body Y admittance}, type: boolean, default: true}
+    PADM_Z_EN: {description: {short: Enable body Z admittance}, type: boolean, default: true}
+    PADM_YAW_EN: {description: {short: Enable body Z yaw admittance}, type: boolean, default: true}
+    PADM_X_M: {description: {short: Virtual X inertia (not vehicle mass)}, type: float, unit: kg, min: 0.01, default: 4.0}
+    PADM_X_D: {description: {short: Virtual X damping in N s per m}, type: float, min: 0.01, default: 40.0}
+    PADM_X_K: {description: {short: Virtual X stiffness in N per m}, type: float, min: 0, default: 0.0}
+    PADM_Y_M: {description: {short: Virtual Y inertia (not vehicle mass)}, type: float, unit: kg, min: 0.01, default: 6.0}
+    PADM_Y_D: {description: {short: Virtual Y damping in N s per m}, type: float, min: 0.01, default: 60.0}
+    PADM_Y_K: {description: {short: Virtual Y stiffness in N per m}, type: float, min: 0, default: 0.0}
+    PADM_Z_M: {description: {short: Virtual Z inertia (not vehicle mass)}, type: float, unit: kg, min: 0.01, default: 6.0}
+    PADM_Z_D: {description: {short: Virtual Z damping in N s per m}, type: float, min: 0.01, default: 60.0}
+    PADM_Z_K: {description: {short: Virtual Z stiffness in N per m}, type: float, min: 0, default: 0.0}
+    PADM_YAW_J: {description: {short: Virtual yaw inertia (not vehicle inertia)}, type: float, unit: kg m^2, min: 0.001, default: 0.2}
+    PADM_YAW_D: {description: {short: Virtual yaw damping in N m s per rad}, type: float, min: 0.001, default: 1.0}
+    PADM_YAW_K: {description: {short: Virtual yaw stiffness in N m per rad}, type: float, min: 0, default: 0.0}
+    PADM_Y_FDB: {description: {short: Body Y force deadband}, type: float, unit: N, min: 0, default: 0.1}
+    PADM_Z_FDB: {description: {short: Body Z force deadband}, type: float, unit: N, min: 0, default: 0.1}
+    PADM_YAW_TDB: {description: {short: Body Z torque deadband in N m}, type: float, min: 0, default: 0.02}
+    PADM_HO_T: {description: {short: Maximum handover deceleration time}, type: float, unit: s, min: 0.1, default: 1.5}
+    PADM_HO_V: {description: {short: Handover translational stop speed}, type: float, unit: m/s, min: 0, default: 0.01}
+    PADM_HO_R: {description: {short: Handover yaw stop rate}, type: float, unit: rad/s, min: 0, default: 0.02}
+    PADM_HO_DS: {description: {short: Handover damping scale}, type: float, min: 1, default: 1.5}
+    PADM_X_FMAX: {description: {short: X input limit}, type: float, unit: N, min: 0.01, default: 5.0}
+    PADM_Y_FMAX: {description: {short: Y input limit}, type: float, unit: N, min: 0.01, default: 5.0}
+    PADM_Z_FMAX: {description: {short: Z input limit}, type: float, unit: N, min: 0.01, default: 5.0}
+    PADM_YAW_TMAX: {description: {short: Yaw torque input limit in N m}, type: float, min: 0.01, default: 1.0}
+    PADM_X_AMAX: {description: {short: X acceleration limit}, type: float, unit: m/s^2, min: 0.01, default: 1.0}
+    PADM_Y_AMAX: {description: {short: Y acceleration limit}, type: float, unit: m/s^2, min: 0.01, default: 1.0}
+    PADM_Z_AMAX: {description: {short: Z acceleration limit}, type: float, unit: m/s^2, min: 0.01, default: 1.0}
+    PADM_YAW_AMAX: {description: {short: Yaw acceleration limit}, type: float, unit: rad/s^2, min: 0.01, default: 1.0}
+    PADM_X_VMAX: {description: {short: X speed limit}, type: float, unit: m/s, min: 0.001, default: 0.05}
+    PADM_Y_VMAX: {description: {short: Y speed limit}, type: float, unit: m/s, min: 0.001, default: 0.15}
+    PADM_Z_VMAX: {description: {short: Z speed limit}, type: float, unit: m/s, min: 0.001, default: 0.15}
+    PADM_YAW_RMAX: {description: {short: Yaw-rate limit}, type: float, unit: rad/s, min: 0.001, default: 0.30}
+    PADM_X_PMAX: {description: {short: X offset limit}, type: float, unit: m, min: 0.001, default: 0.10}
+    PADM_Y_PMAX: {description: {short: Y offset limit}, type: float, unit: m, min: 0.001, default: 0.30}
+    PADM_Z_PMAX: {description: {short: Z offset limit}, type: float, unit: m, min: 0.001, default: 0.30}
+    PADM_YAW_QMAX: {description: {short: Yaw offset limit}, type: float, unit: rad, min: 0.001, default: 0.35}

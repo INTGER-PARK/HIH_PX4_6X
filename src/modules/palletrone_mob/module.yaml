@@ -7,14 +7,14 @@ parameters:
         description:
           short: Enable publish-only Palletrone momentum observer
         type: boolean
-        default: false
+        default: true
       PMOB_MASS:
         description: {short: Modeled vehicle mass}
         type: float
         unit: kg
         min: 0.1
         max: 100
-        default: 4.0
+        default: 1.6
       PMOB_IXX:
         description: {short: Body inertia Jxx}
         type: float
@@ -48,32 +48,198 @@ parameters:
         type: float
         unit: kg m^2
         default: 0.0
-      PMOB_F_WN:
-        description: {short: Force observer natural frequency}
+      PMOB_FX_WN:
+        description:
+          short: Force observer X natural frequency
+          long: >
+            Body FRD +x forward-force observer natural frequency. Larger values
+            make the Fx response faster, but also more sensitive to sensor
+            noise and model mismatch.
         type: float
         unit: rad/s
         min: 0.1
         max: 100
         default: 6.0
-      PMOB_F_ZETA:
-        description: {short: Force observer damping ratio}
+      PMOB_FX_ZETA:
+        description:
+          short: Force observer X damping ratio
+          long: >
+            Body FRD +x forward-force observer dimensionless damping ratio.
+            Larger values reduce overshoot, but can make the Fx response more
+            gradual.
         type: float
         min: 0.1
         max: 5
         default: 0.9
-      PMOB_T_WN:
-        description: {short: Torque observer natural frequency}
+      PMOB_FY_WN:
+        description:
+          short: Force observer Y natural frequency
+          long: >
+            Body FRD +y right-force observer natural frequency. Larger values
+            make the Fy response faster, but also more sensitive to sensor
+            noise and model mismatch.
+        type: float
+        unit: rad/s
+        min: 0.1
+        max: 100
+        default: 6.0
+      PMOB_FY_ZETA:
+        description:
+          short: Force observer Y damping ratio
+          long: >
+            Body FRD +y right-force observer dimensionless damping ratio.
+            Larger values reduce overshoot, but can make the Fy response more
+            gradual.
+        type: float
+        min: 0.1
+        max: 5
+        default: 0.9
+      PMOB_FZ_WN:
+        description:
+          short: Force observer Z natural frequency
+          long: >
+            Body FRD +z downward-force observer natural frequency. Larger
+            values make the Fz response faster, but also more sensitive to
+            sensor noise and model mismatch.
+        type: float
+        unit: rad/s
+        min: 0.1
+        max: 100
+        default: 6.0
+      PMOB_FZ_ZETA:
+        description:
+          short: Force observer Z damping ratio
+          long: >
+            Body FRD +z downward-force observer dimensionless damping ratio.
+            Larger values reduce overshoot, but can make the Fz response more
+            gradual.
+        type: float
+        min: 0.1
+        max: 5
+        default: 0.9
+      PMOB_TX_WN:
+        description:
+          short: Torque observer X natural frequency
+          long: >
+            Body FRD roll-torque observer natural frequency about +x. Larger
+            values make the Tx response faster, but also more sensitive to
+            sensor noise and model mismatch.
         type: float
         unit: rad/s
         min: 0.1
         max: 100
         default: 10.0
-      PMOB_T_ZETA:
-        description: {short: Torque observer damping ratio}
+      PMOB_TX_ZETA:
+        description:
+          short: Torque observer X damping ratio
+          long: >
+            Body FRD roll-torque observer dimensionless damping ratio about +x.
+            Larger values reduce overshoot, but can make the Tx response more
+            gradual.
         type: float
         min: 0.1
         max: 5
         default: 0.9
+      PMOB_TY_WN:
+        description:
+          short: Torque observer Y natural frequency
+          long: >
+            Body FRD pitch-torque observer natural frequency about +y. Larger
+            values make the Ty response faster, but also more sensitive to
+            sensor noise and model mismatch.
+        type: float
+        unit: rad/s
+        min: 0.1
+        max: 100
+        default: 10.0
+      PMOB_TY_ZETA:
+        description:
+          short: Torque observer Y damping ratio
+          long: >
+            Body FRD pitch-torque observer dimensionless damping ratio about
+            +y. Larger values reduce overshoot, but can make the Ty response
+            more gradual.
+        type: float
+        min: 0.1
+        max: 5
+        default: 0.9
+      PMOB_TZ_WN:
+        description:
+          short: Torque observer Z natural frequency
+          long: >
+            Body FRD yaw-torque observer natural frequency about +z. Larger
+            values make the Tz response faster, but also more sensitive to
+            sensor noise and model mismatch.
+        type: float
+        unit: rad/s
+        min: 0.1
+        max: 100
+        default: 10.0
+      PMOB_TZ_ZETA:
+        description:
+          short: Torque observer Z damping ratio
+          long: >
+            Body FRD yaw-torque observer dimensionless damping ratio about +z.
+            Larger values reduce overshoot, but can make the Tz response more
+            gradual.
+        type: float
+        min: 0.1
+        max: 5
+        default: 0.9
+      PMOB_BIAS_FX:
+        description:
+          short: MOB raw X force output bias
+          long: Bias subtracted from the raw BODY_FRD MOB residual estimate. This does not modify the observer dynamics.
+        type: float
+        unit: N
+        min: -50
+        max: 50
+        default: 0.0
+      PMOB_BIAS_FY:
+        description:
+          short: MOB raw Y force output bias
+          long: Bias subtracted from the raw BODY_FRD MOB residual estimate. This does not modify the observer dynamics.
+        type: float
+        unit: N
+        min: -50
+        max: 50
+        default: 0.0
+      PMOB_BIAS_FZ:
+        description:
+          short: MOB raw Z force output bias
+          long: Bias subtracted from the raw BODY_FRD MOB residual estimate. This does not modify the observer dynamics.
+        type: float
+        unit: N
+        min: -50
+        max: 50
+        default: 0.0
+      PMOB_BIAS_TX:
+        description:
+          short: MOB raw X torque output bias
+          long: Bias subtracted from the raw BODY_FRD MOB residual estimate. This does not modify the observer dynamics.
+        type: float
+        unit: Nm
+        min: -10
+        max: 10
+        default: 0.0
+      PMOB_BIAS_TY:
+        description:
+          short: MOB raw Y torque output bias
+          long: Bias subtracted from the raw BODY_FRD MOB residual estimate. This does not modify the observer dynamics.
+        type: float
+        unit: Nm
+        min: -10
+        max: 10
+        default: 0.0
+      PMOB_BIAS_TZ:
+        description:
+          short: MOB raw Z torque output bias
+          long: Bias subtracted from the raw BODY_FRD MOB residual estimate. This does not modify the observer dynamics.
+        type: float
+        unit: Nm
+        min: -10
+        max: 10
+        default: 0.0
       PMOB_ODOM_TO:
         description: {short: Odometry reception timeout}
         type: float
