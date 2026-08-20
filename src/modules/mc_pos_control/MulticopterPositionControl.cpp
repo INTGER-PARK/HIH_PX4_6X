@@ -573,9 +573,9 @@ void MulticopterPositionControl::Run()
 
 	// Single writer for the effective outer-loop reference. The existing cascade
 	// remains active; admittance never writes thrust, torque, allocator or actuators.
+	const bool admittance_position_mode = _vehicle_control_mode.flag_control_position_enabled;
 	_admittance_manager.update(hrt_absolute_time(), dt, _rotation_local_body, _attitude_valid,
-		_vehicle_control_mode.flag_armed, _vehicle_control_mode.flag_control_position_enabled &&
-		_custom_control_mode.custom_mode_flag, _custom_control_mode.trajectory_flag,
+		_vehicle_control_mode.flag_armed, admittance_position_mode, _custom_control_mode.trajectory_flag,
 		pose_setpoint, custom_command_velocity);
 	_control.setInputSetpoint(pose_setpoint);
 

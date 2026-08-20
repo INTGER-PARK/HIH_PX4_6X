@@ -24,7 +24,7 @@ int main(){
 }'''
 with tempfile.TemporaryDirectory() as d:
     src=pathlib.Path(d)/"test.cpp"; exe=pathlib.Path(d)/"test"; src.write_text(source)
-    subprocess.run(["g++","-std=c++14","-Wall","-Wextra","-Werror",f"-I{ROOT}/src",str(src),"-o",str(exe)],check=True)
+    subprocess.run(["g++","-std=c++14","-Wall","-Wextra","-Werror",f"-I{ROOT}",str(src),"-o",str(exe)],check=True)
     subprocess.run([str(exe)],check=True)
 
 # Sign, contact hysteresis, and bumpless reference invariants (implementation equations).
@@ -45,6 +45,14 @@ assert abs(dz(corrected_fy,.1)-.4)<1e-9
 admittance_source=(ROOT/"src/modules/mc_pos_control/palletrone_admittance/AdmittanceManager.hpp").read_text()
 assert "external_force_corrected[1]" in admittance_source
 assert "external_torque_corrected[2]" in admittance_source
+position_control_source=(ROOT/"src/modules/mc_pos_control/MulticopterPositionControl.cpp").read_text()
+assert "const bool admittance_position_mode = _vehicle_control_mode.flag_control_position_enabled;" in position_control_source
+assert "_vehicle_control_mode.flag_armed, admittance_position_mode" in position_control_source
+assert "if (_hold_latched) { applyEffective" in admittance_source
+assert "_hold_latched || _state != DISABLED_HOLD" not in admittance_source
+assert "if (!request && (_state == WAIT_VALID || _state == WAIT_CONTACT))" in admittance_source
+assert "else if ((_state == ACTIVE || _state == BLEND_IN)" in admittance_source
+assert admittance_source.count("_effective_velocity.zero()") >= 4
 
 base=[1.,2.,-1.,3.12]; offset=[.2,-.1,.05,.3]
 eff_before=[a+b for a,b in zip(base,offset)]

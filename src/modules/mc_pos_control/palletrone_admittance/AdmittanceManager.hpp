@@ -54,22 +54,37 @@ public:
 		const bool trajectory_rising = trajectory_flag && !_last_trajectory_flag;
 		_last_trajectory_flag = trajectory_flag;
 		if (_hold_latched && trajectory_rising && _state == DISABLED_HOLD && !request) {
-			_hold_latched = false; // explicit new command session releases ownership
+			releaseOwnership(); // preserve the legacy explicit new-command-session release
 		}
 
-		if (!request && (_state == WAIT_VALID || _state == WAIT_CONTACT || _state == BLEND_IN)) {
+		if (!request && (_state == WAIT_VALID || _state == WAIT_CONTACT)) {
+			releaseOwnership();
 			_state = DISABLED_HOLD;
 		} else if ((_state == ACTIVE || _state == BLEND_IN) && (!basic_valid || !_contact)) {
 			startHandover(now);
 		}
 
 		if (_state == DISABLED_HOLD) {
-			if (request) { latchBase(position_yaw_sp); _state = basic_valid ? (_contact ? BLEND_IN : WAIT_CONTACT) : WAIT_VALID; }
+			if (request) {
+				if (!basic_valid) {
+					_state = WAIT_VALID;
+				} else if (latchBase(position_yaw_sp)) {
+					_state = _contact ? BLEND_IN : WAIT_CONTACT;
+				}
+			}
 		} else if (_state == WAIT_VALID) {
-			if (basic_valid) { _state = _contact ? BLEND_IN : WAIT_CONTACT; _state_since = now; }
+			if (basic_valid && latchBase(position_yaw_sp)) {
+				_state = _contact ? BLEND_IN : WAIT_CONTACT;
+				_state_since = now;
+			}
 		} else if (_state == WAIT_CONTACT) {
-			if (!basic_valid) { _state = WAIT_VALID; }
-			else if (_contact) { _state = BLEND_IN; _state_since = now; }
+			if (!basic_valid) {
+				releaseOwnership();
+				_state = WAIT_VALID;
+			} else if (_contact) {
+				_state = BLEND_IN;
+				_state_since = now;
+			}
 		}
 
 		if ((_state == BLEND_IN || _state == ACTIVE) && new_mob && _mob.timestamp_sample != _last_mob_sample) {
@@ -96,7 +111,7 @@ public:
 			}
 		}
 
-		if (_hold_latched || _state != DISABLED_HOLD) { applyEffective(position_yaw_sp, velocity_yawrate_sp); }
+		if (_hold_latched) { applyEffective(position_yaw_sp, velocity_yawrate_sp); }
 		publish(now, cmd_fresh, mob_fresh, force_valid, yaw_valid, loop_dt);
 	}
 
@@ -139,15 +154,16 @@ private:
 	}
 	bool finiteWrench(bool torque) const { if(torque) return PX4_ISFINITE(_mob.external_torque_corrected[2]); return PX4_ISFINITE(_mob.external_force_corrected[0])&&PX4_ISFINITE(_mob.external_force_corrected[1])&&PX4_ISFINITE(_mob.external_force_corrected[2]); }
 	void updateContact(uint64_t now,bool valid){ if(!valid){_contact=false;_contact_candidate_since=0;return;} bool candidate=_contact?_normal_force>_p.n_off:_normal_force>=_p.n_on; if(candidate){_contact_off_since=0;if(!_contact){if(!_contact_candidate_since)_contact_candidate_since=now;if(elapsed(now,_contact_candidate_since)>=_p.n_on_t)_contact=true;}}else{_contact_candidate_since=0;if(_contact){if(!_contact_off_since)_contact_off_since=now;if(elapsed(now,_contact_off_since)>=_p.n_off_t){_contact=false;_contact_lost=true;}}} }
-	void latchBase(const matrix::Vector4f &sp){ if(!sp.isAllFinite()){_state=FAULT_HOLD;return;} _base=sp;_offset.zero();_core.reset();_hold_latched=true;_state_since=hrt_absolute_time(); }
-	void resetAt(const matrix::Vector4f &sp){ if(sp.isAllFinite())_base=sp;_offset.zero();_core.reset();_hold_latched=true;_state=DISABLED_HOLD; }
+	bool latchBase(const matrix::Vector4f &sp){ if(!sp.isAllFinite()){severeFault(sp);return false;} _base=sp;_offset.zero();_core.reset();_effective_velocity.zero();_hold_latched=true;_state_since=hrt_absolute_time();return true; }
+	void resetAt(const matrix::Vector4f &sp){ if(sp.isAllFinite())_base=sp;_offset.zero();_core.reset();_effective_velocity.zero();_hold_latched=false;_state=DISABLED_HOLD; }
 	void startHandover(uint64_t now){_state=HANDOVER_DECEL;_state_since=now;}
-	void severeFault(const matrix::Vector4f &sp){if(sp.isAllFinite())_base=sp;_offset.zero();_core.reset();_hold_latched=true;_state=FAULT_HOLD;_fault_flags|=FAULT;}
+	void severeFault(const matrix::Vector4f &sp){if(sp.isAllFinite())_base=sp;_offset.zero();_core.reset();_effective_velocity.zero();_hold_latched=true;_state=FAULT_HOLD;_fault_flags|=FAULT;}
 	void makeInput(float blend,float out[4]){float raw[4]={_p.n_des-_normal_force,_mob.external_force_corrected[1],_mob.external_force_corrected[2],_mob.external_torque_corrected[2]};for(int i=0;i<4;i++){out[i]=_p.axis_en[i]?palletrone::Admittance4D::deadzone(raw[i],i==0?_p.n_edb:_p.db[i])*blend:0.f;float c=math::constrain(out[i],-_p.input_max[i],_p.input_max[i]);if(fabsf(c-out[i])>FLT_EPSILON)_sat_flags|=INPUT_LIMIT;out[i]=c;_last_input[i]=out[i];}}
 	bool stepCore(float dt,const float input[4],bool handover){palletrone::Admittance4D::AxisParams p[4]={_p.axis[0],_p.axis[1],_p.axis[2],_p.axis[3]};if(handover)for(int i=0;i<4;i++){p[i].stiffness=0;p[i].damping*=_p.ho_ds;}if(!_core.update(dt,input,p)){_fault_flags|=DT_INVALID;return false;}for(int i=0;i<4;i++){auto s=_core.state(i);float a=math::constrain(s.ddq,-_p.accel_max[i],_p.accel_max[i]);if(fabsf(a-s.ddq)>FLT_EPSILON){_sat_flags|=ACCEL_LIMIT;s.ddq=a;s.dq=math::constrain(s.dq,-_p.velocity_max[i],_p.velocity_max[i]);}_core.setState(i,s);}return true;}
 	void integrate(float dt,const matrix::Dcmf &R){matrix::Vector3f vb{_core.state(0).dq,_core.state(1).dq,_core.state(2).dq};for(int i=0;i<3;i++){float c=math::constrain(vb(i),-_p.velocity_max[i],_p.velocity_max[i]);if(fabsf(c-vb(i))>FLT_EPSILON)_sat_flags|=VELOCITY_LIMIT;vb(i)=c;auto s=_core.state(i);s.dq=c;_core.setState(i,s);}matrix::Vector3f vl=R*vb;for(int i=0;i<3;i++){float next=_offset(i)+vl(i)*dt;float c=math::constrain(next,-_p.position_max[i],_p.position_max[i]);if(fabsf(c-next)>FLT_EPSILON){_sat_flags|=POSITION_LIMIT;if((c>=_p.position_max[i]&&vl(i)>0)||(c<=-_p.position_max[i]&&vl(i)<0)){auto s=_core.state(i);s.dq=0;s.ddq=0;_core.setState(i,s);vl(i)=0;}}_offset(i)=c;_effective_velocity(i)=vl(i);}auto sy=_core.state(3);sy.dq=math::constrain(sy.dq,-_p.velocity_max[3],_p.velocity_max[3]);float yn=_offset(3)+sy.dq*dt;float yc=math::constrain(yn,-_p.position_max[3],_p.position_max[3]);if(fabsf(yc-yn)>FLT_EPSILON){_sat_flags|=POSITION_LIMIT;if((yc>=_p.position_max[3]&&sy.dq>0)||(yc<=-_p.position_max[3]&&sy.dq<0)){sy.dq=0;sy.ddq=0;}}_offset(3)=yc;_effective_velocity(3)=sy.dq;_core.setState(3,sy);}
-	void atomicRebase(){_base+=_offset;_offset.zero();_core.reset();_effective_velocity.zero();_hold_latched=true;_state=DISABLED_HOLD;}
-	void applyEffective(matrix::Vector4f &sp,matrix::Vector4f &vel){sp=_base+_offset;vel=_effective_velocity;if(_state==DISABLED_HOLD||_state==FAULT_HOLD)vel.zero();}
+	void releaseOwnership(){_offset.zero();_core.reset();_effective_velocity.zero();_hold_latched=false;}
+	void atomicRebase(){_base+=_offset;releaseOwnership();_state=DISABLED_HOLD;}
+	void applyEffective(matrix::Vector4f &sp,matrix::Vector4f &vel){sp=_base+_offset;vel=_effective_velocity;if(_state==WAIT_CONTACT||_state==DISABLED_HOLD||_state==FAULT_HOLD)vel.zero();}
 	void publish(uint64_t now,bool cf,bool mf,bool fv,bool yv,float dt){palletrone_admittance_status_s s{};s.timestamp=now;s.timestamp_sample=_mob.timestamp_sample;s.state=_state;s.master_enabled=_p.master;s.enable_requested=_last_command.enable;s.command_fresh=cf;s.active=_state==ACTIVE;s.contact=_contact;s.translation_valid=fv;s.yaw_valid=yv;s.handover_active=_state==HANDOVER_DECEL;s.hold_latched=_hold_latched;s.reset_count=_reset_count;s.command_sequence=_last_command.sequence;s.command_reset_counter=_last_command.reset_counter;s.normal_force=_normal_force;s.normal_force_desired=_p.n_des;s.normal_error=_p.n_des-_normal_force;s.command_age_s=_last_command_rx?elapsed(now,_last_command_rx):-1;s.mob_age_s=_last_mob_rx?elapsed(now,_last_mob_rx):-1;s.dt=dt;s.status_flags=(_p.master?MASTER:0)|(_last_command.enable?REQUEST:0)|(cf?CMD_FRESH:CMD_TIMEOUT)|(mf?MOB_FRESH:0)|(fv?FORCE_VALID:0)|(yv?TORQUE_VALID:0)|(_contact?CONTACT:0)|(_state==ACTIVE?ACTIVE_F:0)|(_state==HANDOVER_DECEL?HANDOVER:0)|(_hold_latched?HOLD:0)|(_contact_lost?CONTACT_LOST:0)|_sat_flags|_fault_flags;for(int i=0;i<4;i++){s.admittance_input[i]=_last_input[i];s.displacement[i]=_core.state(i).q;s.velocity[i]=_core.state(i).dq;s.acceleration[i]=_core.state(i).ddq;}s.external_wrench[0]=_mob.external_force_corrected[0];s.external_wrench[1]=_mob.external_force_corrected[1];s.external_wrench[2]=_mob.external_force_corrected[2];s.external_wrench[3]=_mob.external_torque_corrected[2];for(int i=0;i<3;i++){s.local_position_offset[i]=_offset(i);s.hold_position[i]=_base(i);s.effective_position_setpoint[i]=_base(i)+_offset(i);s.effective_velocity_setpoint[i]=_effective_velocity(i);}s.local_yaw_offset=_offset(3);s.hold_yaw=_base(3);s.effective_yaw_setpoint=matrix::wrap_pi(_base(3)+_offset(3));s.effective_yaw_rate_setpoint=_effective_velocity(3);_status_pub.publish(s);_sat_flags=0;}
 
 	uORB::Subscription _command_sub{ORB_ID(palletrone_admittance_command)}; uORB::Subscription _mob_sub{ORB_ID(palletrone_mob_status)}; uORB::Publication<palletrone_admittance_status_s> _status_pub{ORB_ID(palletrone_admittance_status)};

@@ -79,11 +79,11 @@ static constexpr float kMotorThrottleTable[kMotorModelPointCount] = {
 // 제조사 gf 데이터를 9.80665 m/s^2로 N 단위 변환.
 static constexpr float kMotorThrustTableN[kMotorModelPointCount] = {
 	0.0f,
-	2.82743663f,   // 282.2 gf @ 20%
-	6.96533173f,   // 696.5 gf @ 40%
-	10.76193606f,  // 1076.1 gf @ 60%
-	16.6934084f,  // 1669.3 gf @ 80%
-	20.83515527f   // 2083.5 gf @ 100%
+	2.82313214f,   // 282.2 gf @ 20% //*0.7 하겠음.//1.9754f
+	6.96573219f,   // 696.5 gf @ 40%//4.87573219f
+	10.761548848f,  // 1076.1 gf @ 60%// 여긴 0.8 8.609548848f
+	16.6937434084f,  // 1669.3 gf @ 80% // 여긴 0.8 13.6357434084f
+	20.835125527f   // 2083.5 gf @ 100% //애는 0.85 17.709885527f
 };
 
 // mini_model_max_throttle = 0.85f
